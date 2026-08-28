@@ -67,7 +67,7 @@ public class AdminOrdersController : ControllerBase
         if (order is null) return NotFound();
 
         if (!Enum.TryParse<OrderStatus>(request.Status, true, out var newStatus))
-            return BadRequest(new { message = "无效的订单状态" });
+            return BadRequest(new { message = "無効な注文状態です" });
 
         var allowed = order.Status switch
         {
@@ -75,7 +75,7 @@ public class AdminOrdersController : ControllerBase
             OrderStatus.Shipped => newStatus == OrderStatus.Completed,
             _ => false
         };
-        if (!allowed) return BadRequest(new { message = $"订单状态不能从 {order.Status} 变更为 {newStatus}" });
+        if (!allowed) return BadRequest(new { message = $"注文状態を {order.Status} から {newStatus} に変更することはできません" });
 
         order.Status = newStatus;
         if (newStatus == OrderStatus.Shipped) order.ShippedAt = DateTime.UtcNow;
@@ -84,8 +84,8 @@ public class AdminOrdersController : ControllerBase
 
         if (order.User is not null)
         {
-            var statusText = newStatus == OrderStatus.Shipped ? "已发货" : "已完成";
-            _ = _emailService.SendAsync(order.User.Email, $"订单状态更新 #{order.Id}", $"<p>您的订单 #{order.Id} 状态已更新为：{statusText}</p>");
+            var statusText = newStatus == OrderStatus.Shipped ? "発送済み" : "完了";
+            _ = _emailService.SendAsync(order.User.Email, $"注文ステータス更新のお知らせ #{order.Id}", $"<p>ご注文 #{order.Id} のステータスが「{statusText}」に更新されました。</p>");
         }
 
         return NoContent();

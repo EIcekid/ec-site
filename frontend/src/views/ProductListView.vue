@@ -65,9 +65,9 @@ function selectCategory(id: number | undefined) {
 <template>
   <div class="container list-page">
     <aside class="sidebar">
-      <h3>商品分类</h3>
+      <h3>商品カテゴリー</h3>
       <ul class="category-list">
-        <li :class="{ active: !categoryId }" @click="selectCategory(undefined)">全部商品</li>
+        <li :class="{ active: !categoryId }" @click="selectCategory(undefined)">全商品</li>
         <li
           v-for="c in flatCategories"
           :key="c.id"
@@ -81,12 +81,12 @@ function selectCategory(id: number | undefined) {
 
     <div class="content">
       <div class="toolbar">
-        <el-input v-model="keyword" placeholder="搜索商品..." clearable style="max-width: 300px" @keyup.enter="page = 1" />
+        <el-input v-model="keyword" placeholder="商品を検索..." clearable style="max-width: 300px" @keyup.enter="page = 1" />
       </div>
 
       <div v-loading="loading" class="grid">
         <ProductCard v-for="p in products" :key="p.id" :product="p" />
-        <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+        <el-empty v-if="!loading && products.length === 0" description="商品がありません" />
       </div>
 
       <el-pagination

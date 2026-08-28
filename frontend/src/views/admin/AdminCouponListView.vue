@@ -35,17 +35,17 @@ function openCreate() {
 
 async function save() {
   if (!form.value.code || !form.value.expiresAt) {
-    ElMessage.warning('请填写完整信息')
+    ElMessage.warning('すべての項目を入力してください')
     return
   }
   saving.value = true
   try {
     await adminApi.createCoupon({ ...form.value, expiresAt: new Date(form.value.expiresAt).toISOString() })
     showDialog.value = false
-    ElMessage.success('创建成功')
+    ElMessage.success('作成しました')
     await load()
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '创建失败')
+    ElMessage.error(e.response?.data?.message ?? '作成に失敗しました')
   } finally {
     saving.value = false
   }
@@ -60,53 +60,53 @@ async function deactivate(id: number) {
 <template>
   <div>
     <div class="header-row">
-      <h1 class="title">优惠券管理</h1>
-      <el-button type="primary" @click="openCreate">新增优惠券</el-button>
+      <h1 class="title">クーポン管理</h1>
+      <el-button type="primary" @click="openCreate">クーポンを追加</el-button>
     </div>
 
     <el-table v-loading="loading" :data="coupons" class="table">
-      <el-table-column prop="code" label="代码" width="140" />
-      <el-table-column label="类型" width="100">
-        <template #default="{ row }">{{ row.type === 'FixedAmount' ? '满减' : '折扣' }}</template>
+      <el-table-column prop="code" label="コード" width="140" />
+      <el-table-column label="タイプ" width="100">
+        <template #default="{ row }">{{ row.type === 'FixedAmount' ? '定額割引' : '割引率' }}</template>
       </el-table-column>
-      <el-table-column label="优惠" width="100">
+      <el-table-column label="割引内容" width="100">
         <template #default="{ row }">{{ row.type === 'FixedAmount' ? `¥${row.value}` : `${row.value}%` }}</template>
       </el-table-column>
-      <el-table-column label="最低消费" width="100">
+      <el-table-column label="最低利用金額" width="100">
         <template #default="{ row }">¥{{ row.minOrderAmount.toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column label="过期时间" width="180">
+      <el-table-column label="有効期限" width="180">
         <template #default="{ row }">{{ new Date(row.expiresAt).toLocaleDateString() }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="100">
+      <el-table-column label="状態" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.isActive ? 'success' : 'info'">{{ row.isActive ? '生效中' : '已停用' }}</el-tag>
+          <el-tag :type="row.isActive ? 'success' : 'info'">{{ row.isActive ? '有効' : '停止中' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="{ row }">
-          <el-button v-if="row.isActive" link type="danger" @click="deactivate(row.id)">停用</el-button>
+          <el-button v-if="row.isActive" link type="danger" @click="deactivate(row.id)">停止</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="showDialog" title="新增优惠券" width="420px">
+    <el-dialog v-model="showDialog" title="クーポンを追加" width="420px">
       <el-form label-width="90px">
-        <el-form-item label="优惠码"><el-input v-model="form.code" placeholder="如 WELCOME10" /></el-form-item>
-        <el-form-item label="类型">
+        <el-form-item label="クーポンコード"><el-input v-model="form.code" placeholder="例：WELCOME10" /></el-form-item>
+        <el-form-item label="タイプ">
           <el-select v-model="form.type">
-            <el-option label="满减（固定金额）" value="FixedAmount" />
-            <el-option label="折扣（百分比）" value="Percentage" />
+            <el-option label="定額割引" value="FixedAmount" />
+            <el-option label="割引率（％）" value="Percentage" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="form.type === 'FixedAmount' ? '减免金额' : '折扣百分比'">
+        <el-form-item :label="form.type === 'FixedAmount' ? '割引額' : '割引率'">
           <el-input-number v-model="form.value" :min="0" :precision="2" />
         </el-form-item>
-        <el-form-item label="最低消费"><el-input-number v-model="form.minOrderAmount" :min="0" :precision="2" /></el-form-item>
-        <el-form-item label="过期时间"><el-date-picker v-model="form.expiresAt" type="date" style="width: 100%" /></el-form-item>
+        <el-form-item label="最低利用金額"><el-input-number v-model="form.minOrderAmount" :min="0" :precision="2" /></el-form-item>
+        <el-form-item label="有効期限"><el-date-picker v-model="form.expiresAt" type="date" style="width: 100%" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
+        <el-button @click="showDialog = false">キャンセル</el-button>
         <el-button type="primary" :loading="saving" @click="save">保存</el-button>
       </template>
     </el-dialog>

@@ -78,7 +78,7 @@ public class AddressesController : ControllerBase
         if (address is null) return NotFound();
 
         var usedByOrder = await _db.Orders.AnyAsync(o => o.AddressId == id);
-        if (usedByOrder) return BadRequest(new { message = "该地址已被历史订单使用，无法删除" });
+        if (usedByOrder) return BadRequest(new { message = "この住所は過去の注文で使用されているため削除できません" });
 
         _db.Addresses.Remove(address);
         await _db.SaveChangesAsync();

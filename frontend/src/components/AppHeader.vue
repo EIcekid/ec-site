@@ -30,29 +30,29 @@ function logout() {
       <router-link to="/" class="logo">EC Site</router-link>
 
       <div class="search">
-        <el-input v-model="keyword" placeholder="搜索商品..." @keyup.enter="search">
+        <el-input v-model="keyword" placeholder="商品を検索..." @keyup.enter="search">
           <template #append>
-            <el-button :icon="'Search'" @click="search">搜索</el-button>
+            <el-button :icon="'Search'" @click="search">検索</el-button>
           </template>
         </el-input>
       </div>
 
       <nav class="nav">
-        <router-link to="/products">全部商品</router-link>
+        <router-link to="/products">全商品</router-link>
         <router-link to="/cart" class="cart-link">
-          购物车
+          カート
           <el-badge v-if="cart.totalCount > 0" :value="cart.totalCount" class="cart-badge" />
         </router-link>
 
         <template v-if="auth.isLoggedIn">
-          <router-link to="/orders">我的订单</router-link>
-          <router-link v-if="auth.isAdmin" to="/admin">后台管理</router-link>
+          <router-link to="/orders">注文履歴</router-link>
+          <router-link v-if="auth.isAdmin" to="/admin">管理画面</router-link>
           <span class="user-name">{{ auth.name }}</span>
-          <a href="#" @click.prevent="logout">退出</a>
+          <a href="#" @click.prevent="logout">ログアウト</a>
         </template>
         <template v-else>
-          <router-link to="/login">登录</router-link>
-          <router-link to="/register">注册</router-link>
+          <router-link to="/login">ログイン</router-link>
+          <router-link to="/register">新規登録</router-link>
         </template>
       </nav>
     </div>

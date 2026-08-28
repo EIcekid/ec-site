@@ -14,7 +14,7 @@ public static class SeedData
             db.Users.Add(new User
             {
                 Email = "admin@ec-site.local",
-                Name = "管理员",
+                Name = "管理者",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 Role = UserRole.Admin
             });
@@ -22,52 +22,52 @@ public static class SeedData
 
         if (!await db.Categories.AnyAsync())
         {
-            var electronics = new Category { Name = "数码电子" };
-            var clothing = new Category { Name = "服饰鞋包" };
-            var home = new Category { Name = "家居生活" };
+            var electronics = new Category { Name = "デジタル家電" };
+            var clothing = new Category { Name = "ファッション・シューズ" };
+            var home = new Category { Name = "生活雑貨" };
             db.Categories.AddRange(electronics, clothing, home);
             await db.SaveChangesAsync();
 
             db.Products.AddRange(
                 new Product
                 {
-                    Name = "无线蓝牙耳机", Description = "主动降噪，续航30小时", Price = 299.00m, Stock = 50,
+                    Name = "ワイヤレスイヤホン", Description = "アクティブノイズキャンセリング、連続30時間再生", Price = 299.00m, Stock = 50,
                     CategoryId = electronics.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/headphone/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "机械键盘", Description = "青轴，RGB背光", Price = 359.00m, Stock = 30,
+                    Name = "メカニカルキーボード", Description = "青軸、RGBバックライト搭載", Price = 359.00m, Stock = 30,
                     CategoryId = electronics.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/keyboard/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "智能手表", Description = "心率监测，7天续航", Price = 599.00m, Stock = 20,
+                    Name = "スマートウォッチ", Description = "心拍数モニター、7日間バッテリー", Price = 599.00m, Stock = 20,
                     CategoryId = electronics.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/watch/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "纯棉T恤", Description = "简约百搭，透气舒适", Price = 89.00m, Stock = 100,
+                    Name = "コットンTシャツ", Description = "シンプルで合わせやすく、着心地も快適", Price = 89.00m, Stock = 100,
                     CategoryId = clothing.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/tshirt/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "牛仔外套", Description = "秋冬百搭款", Price = 259.00m, Stock = 40,
+                    Name = "デニムジャケット", Description = "秋冬のコーディネートに使えるアイテム", Price = 259.00m, Stock = 40,
                     CategoryId = clothing.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/jacket/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "北欧风台灯", Description = "护眼三档调光", Price = 129.00m, Stock = 60,
+                    Name = "北欧風テーブルランプ", Description = "目に優しい3段階調光機能付き", Price = 129.00m, Stock = 60,
                     CategoryId = home.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/lamp/600/600", SortOrder = 0 } }
                 },
                 new Product
                 {
-                    Name = "陶瓷马克杯套装", Description = "四件套，礼盒装", Price = 79.00m, Stock = 80,
+                    Name = "陶器マグカップセット", Description = "4点セット、ギフトボックス入り", Price = 79.00m, Stock = 80,
                     CategoryId = home.Id,
                     Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/mug/600/600", SortOrder = 0 } }
                 }

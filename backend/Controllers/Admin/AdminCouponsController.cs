@@ -28,10 +28,10 @@ public class AdminCouponsController : ControllerBase
     public async Task<ActionResult<CouponDto>> Create(CreateCouponRequest request)
     {
         if (!Enum.TryParse<CouponType>(request.Type, true, out var type))
-            return BadRequest(new { message = "无效的优惠券类型" });
+            return BadRequest(new { message = "無効なクーポンタイプです" });
 
         var exists = await _db.Coupons.AnyAsync(c => c.Code == request.Code);
-        if (exists) return BadRequest(new { message = "优惠券代码已存在" });
+        if (exists) return BadRequest(new { message = "このクーポンコードは既に存在します" });
 
         var coupon = new Coupon
         {

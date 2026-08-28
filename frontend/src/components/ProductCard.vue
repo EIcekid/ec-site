@@ -14,7 +14,7 @@ defineProps<{ product: ProductListItem }>()
       <p class="category">{{ product.categoryName }}</p>
       <div class="bottom">
         <span class="price">¥{{ product.price.toFixed(2) }}</span>
-        <span v-if="product.stock === 0" class="sold-out">已售罄</span>
+        <span v-if="product.stock === 0" class="sold-out">売り切れ</span>
       </div>
     </div>
   </router-link>

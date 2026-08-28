@@ -60,7 +60,7 @@ public class AdminProductsController : ControllerBase
     public async Task<ActionResult<ProductDetailDto>> Create(CreateProductRequest request)
     {
         var categoryExists = await _db.Categories.AnyAsync(c => c.Id == request.CategoryId);
-        if (!categoryExists) return BadRequest(new { message = "分类不存在" });
+        if (!categoryExists) return BadRequest(new { message = "カテゴリーが存在しません" });
 
         var product = new Product
         {
@@ -81,7 +81,7 @@ public class AdminProductsController : ControllerBase
         if (product is null) return NotFound();
 
         var categoryExists = await _db.Categories.AnyAsync(c => c.Id == request.CategoryId);
-        if (!categoryExists) return BadRequest(new { message = "分类不存在" });
+        if (!categoryExists) return BadRequest(new { message = "カテゴリーが存在しません" });
 
         product.Name = request.Name;
         product.Description = request.Description;

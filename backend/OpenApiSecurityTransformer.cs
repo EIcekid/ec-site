@@ -15,7 +15,7 @@ public class OpenApiSecurityTransformer : IOpenApiDocumentTransformer
                 Scheme = "bearer",
                 In = ParameterLocation.Header,
                 BearerFormat = "JWT",
-                Description = "输入登录后获得的 JWT token"
+                Description = "ログイン後に取得したJWTトークンを入力してください"
             }
         };
         document.Components ??= new OpenApiComponents();

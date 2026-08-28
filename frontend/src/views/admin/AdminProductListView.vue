@@ -25,9 +25,9 @@ async function load() {
 onMounted(load)
 
 async function remove(id: number) {
-  await ElMessageBox.confirm('确定要下架该商品吗？', '提示', { type: 'warning' })
+  await ElMessageBox.confirm('この商品を非公開にしますか？', '確認', { type: 'warning' })
   await adminApi.deleteProduct(id)
-  ElMessage.success('已下架')
+  ElMessage.success('非公開にしました')
   await load()
 }
 </script>
@@ -37,33 +37,33 @@ async function remove(id: number) {
     <div class="header-row">
       <h1 class="title">商品管理</h1>
       <router-link to="/admin/products/new">
-        <el-button type="primary">新增商品</el-button>
+        <el-button type="primary">商品を追加</el-button>
       </router-link>
     </div>
 
     <div class="toolbar">
-      <el-input v-model="keyword" placeholder="搜索商品名..." style="max-width: 260px" @keyup.enter="load" />
-      <el-button @click="load">搜索</el-button>
+      <el-input v-model="keyword" placeholder="商品名で検索..." style="max-width: 260px" @keyup.enter="load" />
+      <el-button @click="load">検索</el-button>
     </div>
 
     <el-table v-loading="loading" :data="products" class="table">
-      <el-table-column label="图片" width="80">
+      <el-table-column label="画像" width="80">
         <template #default="{ row }">
           <img :src="row.imageUrl ?? '/placeholder.png'" class="thumb" />
         </template>
       </el-table-column>
       <el-table-column prop="name" label="名称" min-width="200" />
-      <el-table-column prop="categoryName" label="分类" width="120" />
-      <el-table-column label="价格" width="100">
+      <el-table-column prop="categoryName" label="カテゴリー" width="120" />
+      <el-table-column label="価格" width="100">
         <template #default="{ row }">¥{{ row.price.toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column prop="stock" label="库存" width="80" />
+      <el-table-column prop="stock" label="在庫" width="80" />
       <el-table-column label="操作" width="140">
         <template #default="{ row }">
           <router-link :to="`/admin/products/${row.id}/edit`">
-            <el-button link>编辑</el-button>
+            <el-button link>編集</el-button>
           </router-link>
-          <el-button link type="danger" @click="remove(row.id)">下架</el-button>
+          <el-button link type="danger" @click="remove(row.id)">非公開</el-button>
         </template>
       </el-table-column>
     </el-table>

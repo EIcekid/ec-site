@@ -12,22 +12,22 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="title">数据概览</h1>
+    <h1 class="title">データ概要</h1>
     <div v-if="stats" class="stat-grid">
       <div class="stat-card">
-        <p class="label">上架商品数</p>
+        <p class="label">公開中の商品数</p>
         <p class="value">{{ stats.totalProducts }}</p>
       </div>
       <div class="stat-card">
-        <p class="label">订单总数</p>
+        <p class="label">注文総数</p>
         <p class="value">{{ stats.totalOrders }}</p>
       </div>
       <div class="stat-card">
-        <p class="label">注册用户数</p>
+        <p class="label">登録ユーザー数</p>
         <p class="value">{{ stats.totalUsers }}</p>
       </div>
       <div class="stat-card">
-        <p class="label">累计营收</p>
+        <p class="label">累計売上</p>
         <p class="value">¥{{ stats.totalRevenue.toFixed(2) }}</p>
       </div>
     </div>

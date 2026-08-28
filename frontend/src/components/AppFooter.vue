@@ -1,7 +1,7 @@
 <template>
   <footer class="footer">
     <div class="container">
-      <p>EC Site 训练项目 &middot; C# + SQL Server + Vue.js</p>
+      <p>EC Site 研修プロジェクト &middot; C# + SQL Server + Vue.js</p>
     </div>
   </footer>
 </template>

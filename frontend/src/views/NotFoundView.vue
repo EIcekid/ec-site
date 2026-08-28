@@ -1,8 +1,8 @@
 <template>
   <div class="not-found">
-    <el-empty description="页面不存在">
+    <el-empty description="ページが見つかりません">
       <router-link to="/">
-        <el-button type="primary">返回首页</el-button>
+        <el-button type="primary">トップページに戻る</el-button>
       </router-link>
     </el-empty>
   </div>

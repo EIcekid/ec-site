@@ -24,7 +24,7 @@ async function submit() {
     const redirect = (route.query.redirect as string) || (result.role === 'Admin' ? '/admin' : '/')
     router.push(redirect)
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '登录失败')
+    ElMessage.error(e.response?.data?.message ?? 'ログインに失敗しました')
   } finally {
     loading.value = false
   }
@@ -34,20 +34,20 @@ async function submit() {
 <template>
   <div class="auth-page">
     <el-card class="auth-card">
-      <h1>登录</h1>
+      <h1>ログイン</h1>
       <el-form label-position="top" @submit.prevent="submit">
-        <el-form-item label="邮箱">
+        <el-form-item label="メールアドレス">
           <el-input v-model="email" type="email" placeholder="you@example.com" />
         </el-form-item>
-        <el-form-item label="密码">
+        <el-form-item label="パスワード">
           <el-input v-model="password" type="password" show-password @keyup.enter="submit" />
         </el-form-item>
-        <el-button type="primary" class="submit-btn" :loading="loading" @click="submit">登录</el-button>
+        <el-button type="primary" class="submit-btn" :loading="loading" @click="submit">ログイン</el-button>
       </el-form>
       <p class="switch">
-        还没有账号？<router-link to="/register">立即注册</router-link>
+        アカウントをお持ちでない方は<router-link to="/register">今すぐ登録</router-link>
       </p>
-      <p class="hint">管理员测试账号：admin@ec-site.local / Admin@123</p>
+      <p class="hint">管理者テストアカウント：admin@ec-site.local / Admin@123</p>
     </el-card>
   </div>
 </template>

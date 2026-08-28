@@ -14,20 +14,20 @@ function logout() {
 <template>
   <div class="admin-shell">
     <aside class="sidebar">
-      <div class="brand">EC Site 后台</div>
+      <div class="brand">EC Site 管理画面</div>
       <nav>
-        <router-link to="/admin" exact-active-class="active">概览</router-link>
+        <router-link to="/admin" exact-active-class="active">概要</router-link>
         <router-link to="/admin/products" active-class="active">商品管理</router-link>
-        <router-link to="/admin/orders" active-class="active">订单管理</router-link>
-        <router-link to="/admin/coupons" active-class="active">优惠券管理</router-link>
+        <router-link to="/admin/orders" active-class="active">注文管理</router-link>
+        <router-link to="/admin/coupons" active-class="active">クーポン管理</router-link>
       </nav>
     </aside>
     <div class="main">
       <header class="topbar">
-        <router-link to="/" class="back-link">返回商城</router-link>
+        <router-link to="/" class="back-link">ショップに戻る</router-link>
         <div class="right">
           <span>{{ auth.name }}</span>
-          <a href="#" @click.prevent="logout">退出</a>
+          <a href="#" @click.prevent="logout">ログアウト</a>
         </div>
       </header>
       <div class="content">

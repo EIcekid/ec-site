@@ -26,22 +26,22 @@ async function pay() {
   acting.value = true
   try {
     order.value = await ordersApi.pay(Number(props.id))
-    ElMessage.success('支付成功')
+    ElMessage.success('お支払いが完了しました')
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '支付失败')
+    ElMessage.error(e.response?.data?.message ?? '支払いに失敗しました')
   } finally {
     acting.value = false
   }
 }
 
 async function cancel() {
-  await ElMessageBox.confirm('确定要取消该订单吗？', '提示', { type: 'warning' })
+  await ElMessageBox.confirm('この注文をキャンセルしますか？', '確認', { type: 'warning' })
   acting.value = true
   try {
     order.value = await ordersApi.cancel(Number(props.id))
-    ElMessage.success('订单已取消')
+    ElMessage.success('注文をキャンセルしました')
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '取消失败')
+    ElMessage.error(e.response?.data?.message ?? 'キャンセルに失敗しました')
   } finally {
     acting.value = false
   }
@@ -52,18 +52,18 @@ async function cancel() {
   <div v-loading="loading" class="container order-detail-page">
     <template v-if="order">
       <div class="header-row">
-        <h1>订单 #{{ order.id }}</h1>
+        <h1>注文 #{{ order.id }}</h1>
         <el-tag :type="statusTagType[order.status]" size="large">{{ statusLabels[order.status] }}</el-tag>
       </div>
 
       <section class="block">
-        <h2>收货信息</h2>
+        <h2>配送先情報</h2>
         <p>{{ order.address.recipient }} {{ order.address.phone }}</p>
         <p>{{ order.address.province }}{{ order.address.city }}{{ order.address.detail }}</p>
       </section>
 
       <section class="block">
-        <h2>商品清单</h2>
+        <h2>注文商品</h2>
         <ul class="item-list">
           <li v-for="item in order.items" :key="item.productId">
             <img :src="item.productImageUrl ?? '/placeholder.png'" />
@@ -74,15 +74,15 @@ async function cancel() {
       </section>
 
       <section class="block amounts">
-        <p><span>商品总额</span><span>¥{{ (order.totalAmount + order.discountAmount).toFixed(2) }}</span></p>
-        <p v-if="order.discountAmount > 0"><span>优惠</span><span>-¥{{ order.discountAmount.toFixed(2) }}</span></p>
-        <p class="grand-total"><span>实付</span><span>¥{{ order.totalAmount.toFixed(2) }}</span></p>
+        <p><span>商品合計</span><span>¥{{ (order.totalAmount + order.discountAmount).toFixed(2) }}</span></p>
+        <p v-if="order.discountAmount > 0"><span>割引</span><span>-¥{{ order.discountAmount.toFixed(2) }}</span></p>
+        <p class="grand-total"><span>お支払い金額</span><span>¥{{ order.totalAmount.toFixed(2) }}</span></p>
       </section>
 
       <div class="actions">
-        <el-button v-if="order.status === 'PendingPayment'" :loading="acting" @click="cancel">取消订单</el-button>
+        <el-button v-if="order.status === 'PendingPayment'" :loading="acting" @click="cancel">注文をキャンセル</el-button>
         <el-button v-if="order.status === 'PendingPayment'" type="primary" :loading="acting" @click="pay">
-          立即支付
+          今すぐ支払う
         </el-button>
       </div>
     </template>

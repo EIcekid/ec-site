@@ -57,7 +57,7 @@ async function handleUpload(file: File) {
     const { url } = await adminApi.uploadImage(file)
     form.value.images.push(url)
   } catch {
-    ElMessage.error('上传失败')
+    ElMessage.error('アップロードに失敗しました')
   } finally {
     uploading.value = false
   }
@@ -83,7 +83,7 @@ async function addCategory() {
 
 async function submit() {
   if (!form.value.name || !form.value.categoryId) {
-    ElMessage.warning('请填写商品名称并选择分类')
+    ElMessage.warning('商品名を入力し、カテゴリーを選択してください')
     return
   }
   saving.value = true
@@ -93,10 +93,10 @@ async function submit() {
     } else {
       await adminApi.createProduct({ ...form.value, categoryId: form.value.categoryId! })
     }
-    ElMessage.success('保存成功')
+    ElMessage.success('保存しました')
     router.push('/admin/products')
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '保存失败')
+    ElMessage.error(e.response?.data?.message ?? '保存に失敗しました')
   } finally {
     saving.value = false
   }
@@ -105,32 +105,32 @@ async function submit() {
 
 <template>
   <div class="edit-page">
-    <h1 class="title">{{ isEdit ? '编辑商品' : '新增商品' }}</h1>
+    <h1 class="title">{{ isEdit ? '商品を編集' : '商品を追加' }}</h1>
 
     <el-form label-width="100px" class="form">
-      <el-form-item label="商品名称">
+      <el-form-item label="商品名">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item label="商品描述">
+      <el-form-item label="商品説明">
         <el-input v-model="form.description" type="textarea" :rows="4" />
       </el-form-item>
-      <el-form-item label="价格">
+      <el-form-item label="価格">
         <el-input-number v-model="form.price" :min="0" :precision="2" />
       </el-form-item>
-      <el-form-item label="库存">
+      <el-form-item label="在庫数">
         <el-input-number v-model="form.stock" :min="0" />
       </el-form-item>
-      <el-form-item label="分类">
-        <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 240px">
+      <el-form-item label="カテゴリー">
+        <el-select v-model="form.categoryId" placeholder="カテゴリーを選択" style="width: 240px">
           <el-option v-for="c in flatCategories" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-button link @click="showNewCategory = !showNewCategory">+ 新建分类</el-button>
+        <el-button link @click="showNewCategory = !showNewCategory">+ カテゴリーを新規作成</el-button>
         <div v-if="showNewCategory" class="new-category">
-          <el-input v-model="newCategoryName" placeholder="分类名称" style="width: 180px" />
-          <el-button size="small" type="primary" @click="addCategory">添加</el-button>
+          <el-input v-model="newCategoryName" placeholder="カテゴリー名" style="width: 180px" />
+          <el-button size="small" type="primary" @click="addCategory">追加</el-button>
         </div>
       </el-form-item>
-      <el-form-item label="商品图片">
+      <el-form-item label="商品画像">
         <div class="image-list">
           <div v-for="(img, idx) in form.images" :key="img" class="image-item">
             <img :src="img" />
@@ -138,8 +138,8 @@ async function submit() {
           </div>
           <el-upload :show-file-list="false" :before-upload="beforeUpload" accept="image/*">
             <div class="upload-trigger" :class="{ loading: uploading }">
-              <span v-if="!uploading">+ 上传</span>
-              <span v-else>上传中...</span>
+              <span v-if="!uploading">+ アップロード</span>
+              <span v-else>アップロード中...</span>
             </div>
           </el-upload>
         </div>
@@ -147,7 +147,7 @@ async function submit() {
 
       <el-form-item>
         <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
-        <el-button @click="router.push('/admin/products')">取消</el-button>
+        <el-button @click="router.push('/admin/products')">キャンセル</el-button>
       </el-form-item>
     </el-form>
   </div>

@@ -18,14 +18,14 @@ onMounted(async () => {
 
 <template>
   <div class="container orders-page">
-    <h1>我的订单</h1>
+    <h1>注文履歴</h1>
 
     <div v-loading="loading">
-      <el-empty v-if="!loading && orders.length === 0" description="暂无订单" />
+      <el-empty v-if="!loading && orders.length === 0" description="注文履歴がありません" />
 
       <router-link v-for="order in orders" :key="order.id" :to="`/orders/${order.id}`" class="order-card">
         <div class="order-header">
-          <span>订单号 #{{ order.id }}</span>
+          <span>注文番号 #{{ order.id }}</span>
           <span>{{ new Date(order.createdAt).toLocaleString() }}</span>
           <el-tag :type="statusTagType[order.status]">{{ statusLabels[order.status] }}</el-tag>
         </div>
@@ -33,8 +33,8 @@ onMounted(async () => {
           <img v-for="item in order.items" :key="item.productId" :src="item.productImageUrl ?? '/placeholder.png'" />
         </div>
         <div class="order-footer">
-          <span>共 {{ order.items.reduce((s, i) => s + i.quantity, 0) }} 件</span>
-          <span class="total">合计 ¥{{ order.totalAmount.toFixed(2) }}</span>
+          <span>商品 {{ order.items.reduce((s, i) => s + i.quantity, 0) }} 点</span>
+          <span class="total">合計 ¥{{ order.totalAmount.toFixed(2) }}</span>
         </div>
       </router-link>
     </div>

@@ -44,7 +44,7 @@ async function addToCart() {
     return
   }
   await cart.add(productId.value, quantity.value)
-  ElMessage.success('已加入购物车')
+  ElMessage.success('カートに追加しました')
 }
 
 async function buyNow() {
@@ -54,7 +54,7 @@ async function buyNow() {
 
 async function submitReview() {
   if (!newContent.value.trim()) {
-    ElMessage.warning('请填写评价内容')
+    ElMessage.warning('レビュー内容を入力してください')
     return
   }
   submitting.value = true
@@ -64,9 +64,9 @@ async function submitReview() {
     const [p, r] = await Promise.all([productsApi.get(productId.value), productsApi.reviews(productId.value)])
     product.value = p
     reviews.value = r
-    ElMessage.success('评价成功')
+    ElMessage.success('レビューを投稿しました')
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '评价失败')
+    ElMessage.error(e.response?.data?.message ?? 'レビューの投稿に失敗しました')
   } finally {
     submitting.value = false
   }
@@ -96,10 +96,10 @@ async function submitReview() {
           <h1>{{ product.name }}</h1>
           <div class="rating-row">
             <el-rate :model-value="product.averageRating" disabled allow-half />
-            <span class="review-count">{{ product.reviewCount }} 条评价</span>
+            <span class="review-count">レビュー {{ product.reviewCount }} 件</span>
           </div>
           <p class="price">¥{{ product.price.toFixed(2) }}</p>
-          <p class="stock">库存 {{ product.stock }} 件</p>
+          <p class="stock">在庫 {{ product.stock }} 点</p>
           <p class="desc">{{ product.description }}</p>
 
           <div class="qty-row">
@@ -108,19 +108,19 @@ async function submitReview() {
           </div>
 
           <div class="actions">
-            <el-button size="large" :disabled="product.stock === 0" @click="addToCart">加入购物车</el-button>
-            <el-button size="large" type="primary" :disabled="product.stock === 0" @click="buyNow">立即购买</el-button>
+            <el-button size="large" :disabled="product.stock === 0" @click="addToCart">カートに入れる</el-button>
+            <el-button size="large" type="primary" :disabled="product.stock === 0" @click="buyNow">今すぐ購入</el-button>
           </div>
         </div>
       </div>
 
       <div class="reviews">
-        <h2>商品评价 ({{ reviews.length }})</h2>
+        <h2>商品レビュー ({{ reviews.length }})</h2>
 
         <div v-if="auth.isLoggedIn" class="review-form">
           <el-rate v-model="newRating" />
-          <el-input v-model="newContent" type="textarea" :rows="2" placeholder="分享你的购买体验（需购买过该商品）" />
-          <el-button type="primary" :loading="submitting" @click="submitReview">提交评价</el-button>
+          <el-input v-model="newContent" type="textarea" :rows="2" placeholder="ご購入の感想をお聞かせください（購入済みの方のみ投稿できます）" />
+          <el-button type="primary" :loading="submitting" @click="submitReview">レビューを投稿</el-button>
         </div>
 
         <ul class="review-list">
@@ -133,7 +133,7 @@ async function submitReview() {
             <p>{{ r.content }}</p>
           </li>
         </ul>
-        <el-empty v-if="reviews.length === 0" description="暂无评价" />
+        <el-empty v-if="reviews.length === 0" description="まだレビューがありません" />
       </div>
     </template>
   </div>

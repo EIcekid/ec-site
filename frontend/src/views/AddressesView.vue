@@ -35,7 +35,7 @@ function openEdit(a: Address) {
 
 async function save() {
   if (!form.value.recipient || !form.value.phone || !form.value.detail) {
-    ElMessage.warning('请填写完整地址信息')
+    ElMessage.warning('住所情報をすべて入力してください')
     return
   }
   if (editingId.value) {
@@ -45,11 +45,11 @@ async function save() {
   }
   showDialog.value = false
   await load()
-  ElMessage.success('保存成功')
+  ElMessage.success('保存しました')
 }
 
 async function remove(id: number) {
-  await ElMessageBox.confirm('确定删除该地址吗？', '提示', { type: 'warning' })
+  await ElMessageBox.confirm('この住所を削除しますか？', '確認', { type: 'warning' })
   await addressesApi.remove(id)
   await load()
 }
@@ -58,33 +58,33 @@ async function remove(id: number) {
 <template>
   <div class="container addresses-page">
     <div class="header-row">
-      <h1>收货地址</h1>
-      <el-button type="primary" @click="openCreate">新增地址</el-button>
+      <h1>配送先住所</h1>
+      <el-button type="primary" @click="openCreate">住所を追加</el-button>
     </div>
 
     <div v-loading="loading" class="address-list">
       <div v-for="a in addresses" :key="a.id" class="address-card">
-        <p><strong>{{ a.recipient }}</strong> {{ a.phone }} <el-tag v-if="a.isDefault" size="small">默认</el-tag></p>
+        <p><strong>{{ a.recipient }}</strong> {{ a.phone }} <el-tag v-if="a.isDefault" size="small">デフォルト</el-tag></p>
         <p class="addr-detail">{{ a.province }}{{ a.city }}{{ a.detail }}</p>
         <div class="card-actions">
-          <el-button link @click="openEdit(a)">编辑</el-button>
-          <el-button link type="danger" @click="remove(a.id)">删除</el-button>
+          <el-button link @click="openEdit(a)">編集</el-button>
+          <el-button link type="danger" @click="remove(a.id)">削除</el-button>
         </div>
       </div>
-      <el-empty v-if="!loading && addresses.length === 0" description="暂无收货地址" />
+      <el-empty v-if="!loading && addresses.length === 0" description="配送先住所がありません" />
     </div>
 
-    <el-dialog v-model="showDialog" :title="editingId ? '编辑地址' : '新增地址'" width="420px">
+    <el-dialog v-model="showDialog" :title="editingId ? '住所を編集' : '住所を追加'" width="420px">
       <el-form label-width="80px">
-        <el-form-item label="收货人"><el-input v-model="form.recipient" /></el-form-item>
-        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
-        <el-form-item label="省份"><el-input v-model="form.province" /></el-form-item>
-        <el-form-item label="城市"><el-input v-model="form.city" /></el-form-item>
-        <el-form-item label="详细地址"><el-input v-model="form.detail" type="textarea" /></el-form-item>
-        <el-form-item label="设为默认"><el-switch v-model="form.isDefault" /></el-form-item>
+        <el-form-item label="お名前"><el-input v-model="form.recipient" /></el-form-item>
+        <el-form-item label="電話番号"><el-input v-model="form.phone" /></el-form-item>
+        <el-form-item label="都道府県"><el-input v-model="form.province" /></el-form-item>
+        <el-form-item label="市区町村"><el-input v-model="form.city" /></el-form-item>
+        <el-form-item label="番地・建物名"><el-input v-model="form.detail" type="textarea" /></el-form-item>
+        <el-form-item label="デフォルトに設定"><el-switch v-model="form.isDefault" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
+        <el-button @click="showDialog = false">キャンセル</el-button>
         <el-button type="primary" @click="save">保存</el-button>
       </template>
     </el-dialog>

@@ -12,12 +12,12 @@ const status = ref<OrderStatus | ''>('')
 const loading = ref(true)
 
 const statusOptions: { label: string; value: OrderStatus | '' }[] = [
-  { label: '全部', value: '' },
-  { label: '待支付', value: 'PendingPayment' },
-  { label: '待发货', value: 'Paid' },
-  { label: '已发货', value: 'Shipped' },
-  { label: '已完成', value: 'Completed' },
-  { label: '已取消', value: 'Cancelled' },
+  { label: 'すべて', value: '' },
+  { label: '支払い待ち', value: 'PendingPayment' },
+  { label: '発送準備中', value: 'Paid' },
+  { label: '発送済み', value: 'Shipped' },
+  { label: '完了', value: 'Completed' },
+  { label: 'キャンセル済み', value: 'Cancelled' },
 ]
 
 async function load() {
@@ -36,7 +36,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h1 class="title">订单管理</h1>
+    <h1 class="title">注文管理</h1>
 
     <div class="toolbar">
       <el-select v-model="status" style="width: 140px" @change="load">
@@ -45,23 +45,23 @@ onMounted(load)
     </div>
 
     <el-table v-loading="loading" :data="orders" class="table">
-      <el-table-column prop="id" label="订单号" width="100" />
-      <el-table-column prop="customerName" label="客户" width="140" />
-      <el-table-column label="金额" width="120">
+      <el-table-column prop="id" label="注文番号" width="100" />
+      <el-table-column prop="customerName" label="顧客" width="140" />
+      <el-table-column label="金額" width="120">
         <template #default="{ row }">¥{{ row.totalAmount.toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="120">
+      <el-table-column label="状態" width="120">
         <template #default="{ row }">
           <el-tag :type="statusTagType[row.status as OrderStatus]">{{ statusLabels[row.status as OrderStatus] }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="下单时间" width="180">
+      <el-table-column label="注文日時" width="180">
         <template #default="{ row }">{{ new Date(row.createdAt).toLocaleString() }}</template>
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="{ row }">
           <router-link :to="`/admin/orders/${row.id}`">
-            <el-button link>详情</el-button>
+            <el-button link>詳細</el-button>
           </router-link>
         </template>
       </el-table-column>

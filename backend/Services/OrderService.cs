@@ -19,21 +19,21 @@ public class OrderService : IOrderService
     public async Task<OrderDto> CreateOrderAsync(int userId, CreateOrderRequest request)
     {
         var address = await _db.Addresses.FirstOrDefaultAsync(a => a.Id == request.AddressId && a.UserId == userId);
-        if (address is null) throw new OrderServiceException("收货地址不存在");
+        if (address is null) throw new OrderServiceException("配送先住所が存在しません");
 
         var cartItems = await _db.CartItems
             .Include(c => c.Product!).ThenInclude(p => p.Images)
             .Where(c => c.UserId == userId)
             .ToListAsync();
 
-        if (cartItems.Count == 0) throw new OrderServiceException("购物车为空");
+        if (cartItems.Count == 0) throw new OrderServiceException("カートが空です");
 
         foreach (var item in cartItems)
         {
             if (item.Product is null || !item.Product.IsActive)
-                throw new OrderServiceException($"商品「{item.ProductId}」已下架");
+                throw new OrderServiceException($"商品「{item.ProductId}」は販売を終了しました");
             if (item.Quantity > item.Product.Stock)
-                throw new OrderServiceException($"商品「{item.Product.Name}」库存不足");
+                throw new OrderServiceException($"商品「{item.Product.Name}」の在庫が不足しています");
         }
 
         var totalAmount = cartItems.Sum(c => c.Product!.Price * c.Quantity);
@@ -43,9 +43,9 @@ public class OrderService : IOrderService
         if (!string.IsNullOrWhiteSpace(request.CouponCode))
         {
             coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == request.CouponCode && c.IsActive);
-            if (coupon is null) throw new OrderServiceException("优惠券不存在或已失效");
-            if (coupon.ExpiresAt < DateTime.UtcNow) throw new OrderServiceException("优惠券已过期");
-            if (totalAmount < coupon.MinOrderAmount) throw new OrderServiceException($"订单满{coupon.MinOrderAmount}元才能使用该优惠券");
+            if (coupon is null) throw new OrderServiceException("クーポンが存在しないか、無効になっています");
+            if (coupon.ExpiresAt < DateTime.UtcNow) throw new OrderServiceException("クーポンの有効期限が切れています");
+            if (totalAmount < coupon.MinOrderAmount) throw new OrderServiceException($"このクーポンは{coupon.MinOrderAmount}円以上のご注文でご利用いただけます");
 
             discountAmount = coupon.Type == CouponType.FixedAmount
                 ? coupon.Value
@@ -88,8 +88,8 @@ public class OrderService : IOrderService
         {
             _ = _emailService.SendAsync(
                 user.Email,
-                $"订单确认 #{order.Id}",
-                $"<p>您好 {user.Name}，您的订单 #{order.Id} 已创建成功，应付金额 ¥{order.TotalAmount}。</p>");
+                $"ご注文確認 #{order.Id}",
+                $"<p>{user.Name} 様、ご注文 #{order.Id} を承りました。お支払い金額は ¥{order.TotalAmount} です。</p>");
         }
 
         return new OrderDto(

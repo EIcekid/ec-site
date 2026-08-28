@@ -20,15 +20,15 @@ onMounted(async () => {
 <template>
   <div class="home">
     <div class="banner container">
-      <h1>欢迎来到 EC Site</h1>
-      <p>精选好物，一站购齐</p>
+      <h1>EC Site へようこそ</h1>
+      <p>厳選アイテムをまとめてお届け</p>
       <router-link to="/products">
-        <el-button type="primary" size="large">立即选购</el-button>
+        <el-button type="primary" size="large">今すぐ購入する</el-button>
       </router-link>
     </div>
 
     <div class="container">
-      <h2 class="section-title">热门商品</h2>
+      <h2 class="section-title">人気商品</h2>
       <div v-loading="loading" class="grid">
         <ProductCard v-for="p in products" :key="p.id" :product="p" />
       </div>

@@ -24,10 +24,10 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
-            return BadRequest(new { message = "邮箱不能为空，密码至少6位" });
+            return BadRequest(new { message = "メールアドレスを入力し、パスワードは6文字以上にしてください" });
 
         var exists = await _db.Users.AnyAsync(u => u.Email == request.Email);
-        if (exists) return BadRequest(new { message = "该邮箱已被注册" });
+        if (exists) return BadRequest(new { message = "このメールアドレスは既に登録されています" });
 
         var user = new User
         {
@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return Unauthorized(new { message = "邮箱或密码错误" });
+            return Unauthorized(new { message = "メールアドレスまたはパスワードが正しくありません" });
 
         var token = _tokenService.GenerateToken(user);
         return Ok(new AuthResponse(token, user.Email, user.Name, user.Role.ToString()));

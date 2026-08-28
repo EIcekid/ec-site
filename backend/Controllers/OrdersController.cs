@@ -76,7 +76,7 @@ public class OrdersController : ControllerBase
         var order = await _db.Orders.Include(o => o.Address).Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
         if (order is null) return NotFound();
-        if (order.Status != OrderStatus.PendingPayment) return BadRequest(new { message = "订单状态不允许支付" });
+        if (order.Status != OrderStatus.PendingPayment) return BadRequest(new { message = "この注文状態では支払いできません" });
 
         order.Status = OrderStatus.Paid;
         order.PaidAt = DateTime.UtcNow;
@@ -91,7 +91,7 @@ public class OrdersController : ControllerBase
         var order = await _db.Orders.Include(o => o.Address).Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
         if (order is null) return NotFound();
-        if (order.Status != OrderStatus.PendingPayment) return BadRequest(new { message = "订单状态不允许取消" });
+        if (order.Status != OrderStatus.PendingPayment) return BadRequest(new { message = "この注文状態ではキャンセルできません" });
 
         order.Status = OrderStatus.Cancelled;
         foreach (var item in order.Items)

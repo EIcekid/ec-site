@@ -20,10 +20,10 @@ public class UploadController : ControllerBase
     [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
-        if (file is null || file.Length == 0) return BadRequest(new { message = "请选择文件" });
+        if (file is null || file.Length == 0) return BadRequest(new { message = "ファイルを選択してください" });
 
         var ext = Path.GetExtension(file.FileName);
-        if (!AllowedExtensions.Contains(ext)) return BadRequest(new { message = "仅支持图片文件" });
+        if (!AllowedExtensions.Contains(ext)) return BadRequest(new { message = "画像ファイルのみアップロードできます" });
 
         var uploadsDir = Path.Combine(_env.WebRootPath, "uploads");
         Directory.CreateDirectory(uploadsDir);

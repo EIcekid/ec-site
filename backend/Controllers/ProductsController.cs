@@ -84,7 +84,7 @@ public class ProductsController : ControllerBase
     [HttpPost("{id:int}/reviews")]
     public async Task<ActionResult<ReviewDto>> AddReview(int id, CreateReviewRequest request)
     {
-        if (request.Rating is < 1 or > 5) return BadRequest(new { message = "评分必须在1-5之间" });
+        if (request.Rating is < 1 or > 5) return BadRequest(new { message = "評価は1〜5の範囲で入力してください" });
 
         var productExists = await _db.Products.AnyAsync(p => p.Id == id);
         if (!productExists) return NotFound();
@@ -95,7 +95,7 @@ public class ProductsController : ControllerBase
             .Where(o => o.UserId == userId && o.Status != OrderStatus.Cancelled)
             .SelectMany(o => o.Items)
             .AnyAsync(i => i.ProductId == id);
-        if (!hasPurchased) return BadRequest(new { message = "只有购买过该商品的用户才能评价" });
+        if (!hasPurchased) return BadRequest(new { message = "この商品を購入したユーザーのみレビューを投稿できます" });
 
         var user = await _db.Users.FindAsync(userId);
         var review = new Review { ProductId = id, UserId = userId, Rating = request.Rating, Content = request.Content };

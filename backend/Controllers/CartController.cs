@@ -35,11 +35,11 @@ public class CartController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CartItemDto>> Add(AddCartItemRequest request)
     {
-        if (request.Quantity < 1) return BadRequest(new { message = "数量必须大于0" });
+        if (request.Quantity < 1) return BadRequest(new { message = "数量は1以上を指定してください" });
 
         var userId = User.GetUserId();
         var product = await _db.Products.FindAsync(request.ProductId);
-        if (product is null || !product.IsActive) return NotFound(new { message = "商品不存在" });
+        if (product is null || !product.IsActive) return NotFound(new { message = "商品が見つかりません" });
 
         var existing = await _db.CartItems.FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == request.ProductId);
         if (existing is not null)
@@ -59,7 +59,7 @@ public class CartController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, UpdateCartItemRequest request)
     {
-        if (request.Quantity < 1) return BadRequest(new { message = "数量必须大于0" });
+        if (request.Quantity < 1) return BadRequest(new { message = "数量は1以上を指定してください" });
 
         var userId = User.GetUserId();
         var item = await _db.CartItems.Include(c => c.Product).FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);

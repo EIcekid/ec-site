@@ -15,17 +15,17 @@ const loading = ref(false)
 
 async function submit() {
   if (password.value.length < 6) {
-    ElMessage.warning('密码至少6位')
+    ElMessage.warning('パスワードは6文字以上にしてください')
     return
   }
   loading.value = true
   try {
     const result = await authApi.register(email.value, password.value, name.value)
     auth.setAuth(result)
-    ElMessage.success('注册成功')
+    ElMessage.success('登録が完了しました')
     router.push('/')
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '注册失败')
+    ElMessage.error(e.response?.data?.message ?? '登録に失敗しました')
   } finally {
     loading.value = false
   }
@@ -35,21 +35,21 @@ async function submit() {
 <template>
   <div class="auth-page">
     <el-card class="auth-card">
-      <h1>注册</h1>
+      <h1>新規登録</h1>
       <el-form label-position="top" @submit.prevent="submit">
-        <el-form-item label="昵称">
-          <el-input v-model="name" placeholder="选填，默认取邮箱前缀" />
+        <el-form-item label="ニックネーム">
+          <el-input v-model="name" placeholder="任意入力、未入力の場合はメールアドレスの@より前を使用" />
         </el-form-item>
-        <el-form-item label="邮箱">
+        <el-form-item label="メールアドレス">
           <el-input v-model="email" type="email" placeholder="you@example.com" />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="password" type="password" show-password placeholder="至少6位" @keyup.enter="submit" />
+        <el-form-item label="パスワード">
+          <el-input v-model="password" type="password" show-password placeholder="6文字以上" @keyup.enter="submit" />
         </el-form-item>
-        <el-button type="primary" class="submit-btn" :loading="loading" @click="submit">注册</el-button>
+        <el-button type="primary" class="submit-btn" :loading="loading" @click="submit">登録</el-button>
       </el-form>
       <p class="switch">
-        已有账号？<router-link to="/login">去登录</router-link>
+        既にアカウントをお持ちの方は<router-link to="/login">ログイン</router-link>
       </p>
     </el-card>
   </div>

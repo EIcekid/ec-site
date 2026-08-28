@@ -23,8 +23,8 @@ async function load() {
 onMounted(load)
 
 const nextStatusMap: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> = {
-  Paid: { status: 'Shipped', label: '标记为已发货' },
-  Shipped: { status: 'Completed', label: '标记为已完成' },
+  Paid: { status: 'Shipped', label: '発送済みにする' },
+  Shipped: { status: 'Completed', label: '完了にする' },
 }
 
 async function advance() {
@@ -34,10 +34,10 @@ async function advance() {
   updating.value = true
   try {
     await adminApi.updateOrderStatus(order.value.id, next.status)
-    ElMessage.success('订单状态已更新')
+    ElMessage.success('注文状態を更新しました')
     await load()
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '更新失败')
+    ElMessage.error(e.response?.data?.message ?? '更新に失敗しました')
   } finally {
     updating.value = false
   }
@@ -48,18 +48,18 @@ async function advance() {
   <div v-loading="loading" class="order-detail">
     <template v-if="order">
       <div class="header-row">
-        <h1 class="title">订单 #{{ order.id }}</h1>
+        <h1 class="title">注文 #{{ order.id }}</h1>
         <el-tag :type="statusTagType[order.status]" size="large">{{ statusLabels[order.status] }}</el-tag>
       </div>
 
       <section class="block">
-        <h2>收货信息</h2>
+        <h2>配送先情報</h2>
         <p>{{ order.address.recipient }} {{ order.address.phone }}</p>
         <p>{{ order.address.province }}{{ order.address.city }}{{ order.address.detail }}</p>
       </section>
 
       <section class="block">
-        <h2>商品清单</h2>
+        <h2>注文商品</h2>
         <ul class="item-list">
           <li v-for="item in order.items" :key="item.productId">
             <img :src="item.productImageUrl ?? '/placeholder.png'" />
@@ -70,7 +70,7 @@ async function advance() {
       </section>
 
       <section class="block amounts">
-        <p class="grand-total"><span>实付</span><span>¥{{ order.totalAmount.toFixed(2) }}</span></p>
+        <p class="grand-total"><span>お支払い金額</span><span>¥{{ order.totalAmount.toFixed(2) }}</span></p>
       </section>
 
       <div v-if="nextStatusMap[order.status]" class="actions">

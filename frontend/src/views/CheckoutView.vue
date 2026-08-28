@@ -34,7 +34,7 @@ onMounted(async () => {
 
 async function saveAddress() {
   if (!form.value.recipient || !form.value.phone || !form.value.detail) {
-    ElMessage.warning('请填写完整地址信息')
+    ElMessage.warning('住所情報をすべて入力してください')
     return
   }
   const created = await addressesApi.create(form.value)
@@ -46,17 +46,17 @@ async function saveAddress() {
 
 async function submitOrder() {
   if (!selectedAddressId.value) {
-    ElMessage.warning('请选择收货地址')
+    ElMessage.warning('配送先住所を選択してください')
     return
   }
   submitting.value = true
   try {
     const order = await ordersApi.create(selectedAddressId.value, couponCode.value || undefined)
     await cart.fetch()
-    ElMessage.success('订单创建成功')
+    ElMessage.success('注文が完了しました')
     router.push(`/orders/${order.id}`)
   } catch (e: any) {
-    ElMessage.error(e.response?.data?.message ?? '下单失败')
+    ElMessage.error(e.response?.data?.message ?? '注文に失敗しました')
   } finally {
     submitting.value = false
   }
@@ -65,10 +65,10 @@ async function submitOrder() {
 
 <template>
   <div class="container checkout-page">
-    <h1>确认订单</h1>
+    <h1>注文内容の確認</h1>
 
     <section class="block">
-      <h2>收货地址</h2>
+      <h2>配送先住所</h2>
       <div class="address-list">
         <div
           v-for="a in addresses"
@@ -80,12 +80,12 @@ async function submitOrder() {
           <p><strong>{{ a.recipient }}</strong> {{ a.phone }}</p>
           <p class="addr-detail">{{ a.province }}{{ a.city }}{{ a.detail }}</p>
         </div>
-        <div class="address-card add-new" @click="showAddressDialog = true">+ 新增地址</div>
+        <div class="address-card add-new" @click="showAddressDialog = true">+ 住所を追加</div>
       </div>
     </section>
 
     <section class="block">
-      <h2>商品清单</h2>
+      <h2>注文商品</h2>
       <ul class="item-list">
         <li v-for="item in cart.items" :key="item.id">
           <img :src="item.imageUrl ?? '/placeholder.png'" />
@@ -97,27 +97,27 @@ async function submitOrder() {
     </section>
 
     <section class="block">
-      <h2>优惠券</h2>
-      <el-input v-model="couponCode" placeholder="输入优惠码（可选）" style="max-width: 300px" />
+      <h2>クーポン</h2>
+      <el-input v-model="couponCode" placeholder="クーポンコードを入力（任意）" style="max-width: 300px" />
     </section>
 
     <div class="summary">
-      <span>合计：</span>
+      <span>合計：</span>
       <span class="total">¥{{ cart.totalAmount.toFixed(2) }}</span>
-      <el-button type="primary" size="large" :loading="submitting" @click="submitOrder">提交订单</el-button>
+      <el-button type="primary" size="large" :loading="submitting" @click="submitOrder">注文を確定する</el-button>
     </div>
 
-    <el-dialog v-model="showAddressDialog" title="新增收货地址" width="420px">
+    <el-dialog v-model="showAddressDialog" title="配送先住所を追加" width="420px">
       <el-form label-width="80px">
-        <el-form-item label="收货人"><el-input v-model="form.recipient" /></el-form-item>
-        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
-        <el-form-item label="省份"><el-input v-model="form.province" /></el-form-item>
-        <el-form-item label="城市"><el-input v-model="form.city" /></el-form-item>
-        <el-form-item label="详细地址"><el-input v-model="form.detail" type="textarea" /></el-form-item>
-        <el-form-item label="设为默认"><el-switch v-model="form.isDefault" /></el-form-item>
+        <el-form-item label="お名前"><el-input v-model="form.recipient" /></el-form-item>
+        <el-form-item label="電話番号"><el-input v-model="form.phone" /></el-form-item>
+        <el-form-item label="都道府県"><el-input v-model="form.province" /></el-form-item>
+        <el-form-item label="市区町村"><el-input v-model="form.city" /></el-form-item>
+        <el-form-item label="番地・建物名"><el-input v-model="form.detail" type="textarea" /></el-form-item>
+        <el-form-item label="デフォルトに設定"><el-switch v-model="form.isDefault" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showAddressDialog = false">取消</el-button>
+        <el-button @click="showAddressDialog = false">キャンセル</el-button>
         <el-button type="primary" @click="saveAddress">保存</el-button>
       </template>
     </el-dialog>

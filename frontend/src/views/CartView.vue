@@ -15,7 +15,7 @@ function checkout() {
 
 <template>
   <div class="container cart-page">
-    <h1>购物车</h1>
+    <h1>カート</h1>
 
     <div v-loading="cart.loading">
       <el-table v-if="cart.items.length > 0" :data="cart.items" class="cart-table">
@@ -27,7 +27,7 @@ function checkout() {
             </router-link>
           </template>
         </el-table-column>
-        <el-table-column label="单价" width="120">
+        <el-table-column label="単価" width="120">
           <template #default="{ row }">¥{{ row.price.toFixed(2) }}</template>
         </el-table-column>
         <el-table-column label="数量" width="160">
@@ -41,26 +41,26 @@ function checkout() {
             />
           </template>
         </el-table-column>
-        <el-table-column label="小计" width="120">
+        <el-table-column label="小計" width="120">
           <template #default="{ row }">¥{{ (row.price * row.quantity).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column label="" width="80">
           <template #default="{ row }">
-            <el-button link type="danger" @click="cart.remove(row.id)">删除</el-button>
+            <el-button link type="danger" @click="cart.remove(row.id)">削除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-empty v-else description="购物车是空的">
+      <el-empty v-else description="カートは空です">
         <router-link to="/products">
-          <el-button type="primary">去逛逛</el-button>
+          <el-button type="primary">買い物を続ける</el-button>
         </router-link>
       </el-empty>
 
       <div v-if="cart.items.length > 0" class="summary">
-        <span>共 {{ cart.totalCount }} 件商品，合计：</span>
+        <span>商品 {{ cart.totalCount }} 点、合計：</span>
         <span class="total">¥{{ cart.totalAmount.toFixed(2) }}</span>
-        <el-button type="primary" size="large" @click="checkout">去结算</el-button>
+        <el-button type="primary" size="large" @click="checkout">レジに進む</el-button>
       </div>
     </div>
   </div>

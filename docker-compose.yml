@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - db-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=EcSiteDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True"
+      Jwt__Key: "CHANGE_THIS_DEV_ONLY_SUPER_SECRET_KEY_32BYTES_MIN"
+      Jwt__Issuer: "ec-site-api"
+      Jwt__Audience: "ec-site-client"
+      Smtp__Host: mailhog
+      Smtp__Port: "1025"
+      Cors__AllowedOrigins__0: "http://localhost"
+    ports:
+      - "5000:8080"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  db-data:

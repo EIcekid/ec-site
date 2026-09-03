@@ -20,6 +20,18 @@ public static class SeedData
             });
         }
 
+        if (!await db.Users.AnyAsync(u => u.Email == "customer@ec-site.local"))
+        {
+            db.Users.Add(new User
+            {
+                Email = "customer@ec-site.local",
+                Name = "テスト太郎",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Customer@123"),
+                Role = UserRole.Customer,
+                Points = 500
+            });
+        }
+
         if (!await db.Categories.AnyAsync())
         {
             var electronics = new Category { Name = "デジタル家電" };
@@ -49,15 +61,27 @@ public static class SeedData
                 },
                 new Product
                 {
-                    Name = "コットンTシャツ", Description = "シンプルで合わせやすく、着心地も快適", Price = 89.00m, Stock = 100,
+                    Name = "コットンTシャツ", Description = "シンプルで合わせやすく、着心地も快適", Price = 89.00m, Stock = 0,
                     CategoryId = clothing.Id,
-                    Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/tshirt/600/600", SortOrder = 0 } }
+                    Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/tshirt/600/600", SortOrder = 0 } },
+                    Variants = new List<ProductVariant>
+                    {
+                        new() { Size = "S", Sku = "TSHIRT-S", PriceDelta = 0, Stock = 30 },
+                        new() { Size = "M", Sku = "TSHIRT-M", PriceDelta = 0, Stock = 40 },
+                        new() { Size = "L", Sku = "TSHIRT-L", PriceDelta = 10, Stock = 25 },
+                        new() { Size = "XL", Sku = "TSHIRT-XL", PriceDelta = 10, Stock = 15 },
+                    }
                 },
                 new Product
                 {
-                    Name = "デニムジャケット", Description = "秋冬のコーディネートに使えるアイテム", Price = 259.00m, Stock = 40,
+                    Name = "デニムジャケット", Description = "秋冬のコーディネートに使えるアイテム", Price = 259.00m, Stock = 0,
                     CategoryId = clothing.Id,
-                    Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/jacket/600/600", SortOrder = 0 } }
+                    Images = new List<ProductImage> { new() { Url = "https://picsum.photos/seed/jacket/600/600", SortOrder = 0 } },
+                    Variants = new List<ProductVariant>
+                    {
+                        new() { Color = "ブルー", Sku = "JACKET-BLUE", PriceDelta = 0, Stock = 20 },
+                        new() { Color = "ブラック", Sku = "JACKET-BLACK", PriceDelta = 0, Stock = 20 },
+                    }
                 },
                 new Product
                 {

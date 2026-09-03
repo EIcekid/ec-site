@@ -23,13 +23,19 @@ public class CartController : ControllerBase
         var items = await _db.CartItems.AsNoTracking()
             .Where(c => c.UserId == userId)
             .Include(c => c.Product!).ThenInclude(p => p.Images)
-            .Select(c => new CartItemDto(
-                c.Id, c.ProductId, c.Product!.Name,
-                c.Product.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault(),
-                c.Product.Price, c.Quantity, c.Product.Stock))
+            .Include(c => c.ProductVariant)
             .ToListAsync();
 
-        return Ok(items);
+        var dtos = items.Select(c => new CartItemDto(
+            c.Id, c.ProductId, c.Product!.Name,
+            c.Product.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault(),
+            c.Product.Price + (c.ProductVariant?.PriceDelta ?? 0),
+            c.Quantity,
+            c.ProductVariant?.Stock ?? c.Product.Stock,
+            c.ProductVariantId,
+            c.ProductVariant?.Label)).ToList();
+
+        return Ok(dtos);
     }
 
     [HttpPost]
@@ -38,22 +44,42 @@ public class CartController : ControllerBase
         if (request.Quantity < 1) return BadRequest(new { message = "数量は1以上を指定してください" });
 
         var userId = User.GetUserId();
-        var product = await _db.Products.FindAsync(request.ProductId);
+        var product = await _db.Products.Include(p => p.Variants).FirstOrDefaultAsync(p => p.Id == request.ProductId);
         if (product is null || !product.IsActive) return NotFound(new { message = "商品が見つかりません" });
 
-        var existing = await _db.CartItems.FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == request.ProductId);
+        ProductVariant? variant = null;
+        if (request.ProductVariantId.HasValue)
+        {
+            variant = product.Variants.FirstOrDefault(v => v.Id == request.ProductVariantId.Value);
+            if (variant is null) return BadRequest(new { message = "指定した規格が見つかりません" });
+        }
+        else if (product.Variants.Count > 0)
+        {
+            return BadRequest(new { message = "規格を選択してください" });
+        }
+
+        var stock = variant?.Stock ?? product.Stock;
+        var price = product.Price + (variant?.PriceDelta ?? 0);
+
+        var existing = await _db.CartItems.FirstOrDefaultAsync(c =>
+            c.UserId == userId && c.ProductId == request.ProductId && c.ProductVariantId == request.ProductVariantId);
+
         if (existing is not null)
         {
-            existing.Quantity = Math.Min(existing.Quantity + request.Quantity, product.Stock);
+            existing.Quantity = Math.Min(existing.Quantity + request.Quantity, stock);
         }
         else
         {
-            existing = new CartItem { UserId = userId, ProductId = request.ProductId, Quantity = Math.Min(request.Quantity, product.Stock) };
+            existing = new CartItem
+            {
+                UserId = userId, ProductId = request.ProductId, ProductVariantId = request.ProductVariantId,
+                Quantity = Math.Min(request.Quantity, stock)
+            };
             _db.CartItems.Add(existing);
         }
         await _db.SaveChangesAsync();
 
-        return Ok(new CartItemDto(existing.Id, product.Id, product.Name, null, product.Price, existing.Quantity, product.Stock));
+        return Ok(new CartItemDto(existing.Id, product.Id, product.Name, null, price, existing.Quantity, stock, request.ProductVariantId, variant?.Label));
     }
 
     [HttpPut("{id:int}")]
@@ -62,10 +88,12 @@ public class CartController : ControllerBase
         if (request.Quantity < 1) return BadRequest(new { message = "数量は1以上を指定してください" });
 
         var userId = User.GetUserId();
-        var item = await _db.CartItems.Include(c => c.Product).FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+        var item = await _db.CartItems.Include(c => c.Product).Include(c => c.ProductVariant)
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
         if (item is null) return NotFound();
 
-        item.Quantity = Math.Min(request.Quantity, item.Product!.Stock);
+        var stock = item.ProductVariant?.Stock ?? item.Product!.Stock;
+        item.Quantity = Math.Min(request.Quantity, stock);
         await _db.SaveChangesAsync();
         return NoContent();
     }

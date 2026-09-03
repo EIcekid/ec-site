@@ -15,4 +15,5 @@ public class Product
 
     public List<ProductImage> Images { get; set; } = new();
     public List<Review> Reviews { get; set; } = new();
+    public List<ProductVariant> Variants { get; set; } = new();
 }

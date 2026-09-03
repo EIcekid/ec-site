@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,9 +42,32 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<CartItem>(e =>
         {
-            e.HasIndex(c => new { c.UserId, c.ProductId }).IsUnique();
+            // SQL Server treats each NULL as distinct in a unique index, so the no-variant case
+            // needs its own filtered index on (UserId, ProductId) to actually enforce uniqueness.
+            e.HasIndex(c => new { c.UserId, c.ProductId })
+                .IsUnique()
+                .HasFilter("[ProductVariantId] IS NULL")
+                .HasDatabaseName("IX_CartItems_UserId_ProductId_NoVariant");
+            e.HasIndex(c => new { c.UserId, c.ProductId, c.ProductVariantId })
+                .IsUnique()
+                .HasFilter("[ProductVariantId] IS NOT NULL")
+                .HasDatabaseName("IX_CartItems_UserId_ProductId_ProductVariantId");
             e.HasOne(c => c.User).WithMany(u => u.CartItems).HasForeignKey(c => c.UserId);
             e.HasOne(c => c.Product).WithMany().HasForeignKey(c => c.ProductId);
+            e.HasOne(c => c.ProductVariant).WithMany().HasForeignKey(c => c.ProductVariantId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductVariant>(e =>
+        {
+            e.Property(v => v.PriceDelta).HasColumnType("decimal(18,2)");
+            e.HasOne(v => v.Product).WithMany(p => p.Variants).HasForeignKey(v => v.ProductId);
+        });
+
+        modelBuilder.Entity<WishlistItem>(e =>
+        {
+            e.HasIndex(w => new { w.UserId, w.ProductId }).IsUnique();
+            e.HasOne(w => w.User).WithMany(u => u.WishlistItems).HasForeignKey(w => w.UserId);
+            e.HasOne(w => w.Product).WithMany().HasForeignKey(w => w.ProductId);
         });
 
         modelBuilder.Entity<Order>(e =>
@@ -58,6 +83,10 @@ public class AppDbContext : DbContext
         {
             e.Property(i => i.Price).HasColumnType("decimal(18,2)");
             e.HasOne(i => i.Order).WithMany(o => o.Items).HasForeignKey(i => i.OrderId);
+            // SetNull (not Restrict): admin product edits replace variants wholesale, which would
+            // otherwise fail once a variant has been referenced by an order. VariantLabel keeps the
+            // historical snapshot even if the ProductVariant row is later deleted.
+            e.HasOne<ProductVariant>().WithMany().HasForeignKey(i => i.ProductVariantId).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Coupon>(e =>

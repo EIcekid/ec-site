@@ -23,7 +23,10 @@ function checkout() {
           <template #default="{ row }">
             <router-link :to="`/products/${row.productId}`" class="product-cell">
               <img :src="row.imageUrl ?? '/placeholder.png'" />
-              <span>{{ row.productName }}</span>
+              <span>
+                {{ row.productName }}
+                <small v-if="row.variantLabel" class="variant-label">{{ row.variantLabel }}</small>
+              </span>
             </router-link>
           </template>
         </el-table-column>
@@ -84,6 +87,12 @@ function checkout() {
   height: 56px;
   object-fit: cover;
   border-radius: 4px;
+}
+.variant-label {
+  display: block;
+  color: #909399;
+  font-size: 12px;
+  margin-top: 2px;
 }
 .summary {
   margin-top: 24px;

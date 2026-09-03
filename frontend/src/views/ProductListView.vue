@@ -15,8 +15,19 @@ const loading = ref(true)
 
 const keyword = ref((route.query.keyword as string) ?? '')
 const categoryId = ref<number | undefined>(route.query.categoryId ? Number(route.query.categoryId) : undefined)
+const sort = ref((route.query.sort as string) ?? 'newest')
+const minPrice = ref<number | undefined>(route.query.minPrice ? Number(route.query.minPrice) : undefined)
+const maxPrice = ref<number | undefined>(route.query.maxPrice ? Number(route.query.maxPrice) : undefined)
 const page = ref(Number(route.query.page ?? 1))
 const pageSize = 12
+
+const sortOptions = [
+  { label: '新着順', value: 'newest' },
+  { label: '価格が安い順', value: 'price_asc' },
+  { label: '価格が高い順', value: 'price_desc' },
+  { label: '評価が高い順', value: 'rating' },
+  { label: '売れ筋順', value: 'sales' },
+]
 
 async function load() {
   loading.value = true
@@ -24,6 +35,9 @@ async function load() {
     const result = await productsApi.list({
       keyword: keyword.value || undefined,
       categoryId: categoryId.value,
+      minPrice: minPrice.value,
+      maxPrice: maxPrice.value,
+      sort: sort.value,
       page: page.value,
       pageSize,
     })
@@ -45,11 +59,14 @@ onMounted(async () => {
   await load()
 })
 
-watch([keyword, categoryId, page], () => {
+watch([keyword, categoryId, sort, minPrice, maxPrice, page], () => {
   router.replace({
     query: {
       ...(keyword.value ? { keyword: keyword.value } : {}),
       ...(categoryId.value ? { categoryId: String(categoryId.value) } : {}),
+      ...(sort.value !== 'newest' ? { sort: sort.value } : {}),
+      ...(minPrice.value !== undefined ? { minPrice: String(minPrice.value) } : {}),
+      ...(maxPrice.value !== undefined ? { maxPrice: String(maxPrice.value) } : {}),
       ...(page.value > 1 ? { page: String(page.value) } : {}),
     },
   })
@@ -58,6 +75,10 @@ watch([keyword, categoryId, page], () => {
 
 function selectCategory(id: number | undefined) {
   categoryId.value = id
+  page.value = 1
+}
+
+function applyPriceFilter() {
   page.value = 1
 }
 </script>
@@ -77,11 +98,22 @@ function selectCategory(id: number | undefined) {
           {{ c.name }}
         </li>
       </ul>
+
+      <h3 class="price-title">価格帯</h3>
+      <div class="price-filter">
+        <el-input-number v-model="minPrice" :min="0" :controls="false" placeholder="下限" size="small" />
+        <span>〜</span>
+        <el-input-number v-model="maxPrice" :min="0" :controls="false" placeholder="上限" size="small" />
+      </div>
+      <el-button size="small" class="price-btn" @click="applyPriceFilter">絞り込む</el-button>
     </aside>
 
     <div class="content">
       <div class="toolbar">
         <el-input v-model="keyword" placeholder="商品を検索..." clearable style="max-width: 300px" @keyup.enter="page = 1" />
+        <el-select v-model="sort" style="width: 160px">
+          <el-option v-for="o in sortOptions" :key="o.value" :label="o.label" :value="o.value" />
+        </el-select>
       </div>
 
       <div v-loading="loading" class="grid">
@@ -120,6 +152,9 @@ function selectCategory(id: number | undefined) {
   margin: 0 0 12px;
   font-size: 15px;
 }
+.price-title {
+  margin-top: 20px;
+}
 .category-list {
   list-style: none;
   margin: 0;
@@ -135,12 +170,28 @@ function selectCategory(id: number | undefined) {
   color: #409eff;
   font-weight: 600;
 }
+.price-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #909399;
+  font-size: 13px;
+}
+.price-filter :deep(.el-input-number) {
+  width: 76px;
+}
+.price-btn {
+  width: 100%;
+  margin-top: 10px;
+}
 .content {
   flex: 1;
   min-width: 0;
 }
 .toolbar {
   margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
 }
 .grid {
   display: grid;

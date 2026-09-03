@@ -19,6 +19,8 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResult<ProductListItemDto>>> List(
         [FromQuery] string? keyword, [FromQuery] int? categoryId,
+        [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice,
+        [FromQuery] string? sort,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 12)
     {
         page = Math.Max(1, page);
@@ -32,16 +34,32 @@ public class ProductsController : ControllerBase
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
 
+        if (minPrice.HasValue)
+            query = query.Where(p => p.Price >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.Price <= maxPrice.Value);
+
         var total = await query.CountAsync();
 
+        query = sort switch
+        {
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "rating" => query.OrderByDescending(p => p.Reviews.Any() ? p.Reviews.Average(r => r.Rating) : 0),
+            "sales" => query.OrderByDescending(p =>
+                _db.OrderItems.Where(oi => oi.ProductId == p.Id).Sum(oi => (int?)oi.Quantity) ?? 0),
+            _ => query.OrderByDescending(p => p.CreatedAt),
+        };
+
         var items = await query
-            .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(p => new ProductListItemDto(
                 p.Id, p.Name, p.Price,
                 p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault(),
-                p.Stock, p.Category!.Name))
+                p.Variants.Any() ? p.Variants.Sum(v => v.Stock) : p.Stock,
+                p.Category!.Name))
             .ToListAsync();
 
         return Ok(new PagedResult<ProductListItemDto>(items, total, page, pageSize));
@@ -54,18 +72,50 @@ public class ProductsController : ControllerBase
             .Include(p => p.Images)
             .Include(p => p.Category)
             .Include(p => p.Reviews)
+            .Include(p => p.Variants)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
 
         if (product is null) return NotFound();
 
+        var isFavorited = false;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userId = User.GetUserId();
+            isFavorited = await _db.WishlistItems.AnyAsync(w => w.UserId == userId && w.ProductId == id);
+        }
+
+        var stock = product.Variants.Count > 0 ? product.Variants.Sum(v => v.Stock) : product.Stock;
+
         var dto = new ProductDetailDto(
-            product.Id, product.Name, product.Description, product.Price, product.Stock,
+            product.Id, product.Name, product.Description, product.Price, stock,
             product.CategoryId, product.Category!.Name,
             product.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList(),
             product.Reviews.Count > 0 ? product.Reviews.Average(r => r.Rating) : 0,
-            product.Reviews.Count);
+            product.Reviews.Count,
+            product.Variants.Select(v => new ProductVariantDto(v.Id, v.Color, v.Size, v.Sku, v.PriceDelta, v.Stock)).ToList(),
+            isFavorited);
 
         return Ok(dto);
+    }
+
+    [HttpGet("{id:int}/related")]
+    public async Task<ActionResult<List<ProductListItemDto>>> GetRelated(int id)
+    {
+        var product = await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        if (product is null) return NotFound();
+
+        var related = await _db.Products.AsNoTracking()
+            .Where(p => p.IsActive && p.Id != id && p.CategoryId == product.CategoryId)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(6)
+            .Select(p => new ProductListItemDto(
+                p.Id, p.Name, p.Price,
+                p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault(),
+                p.Variants.Any() ? p.Variants.Sum(v => v.Stock) : p.Stock,
+                p.Category!.Name))
+            .ToListAsync();
+
+        return Ok(related);
     }
 
     [HttpGet("{id:int}/reviews")]

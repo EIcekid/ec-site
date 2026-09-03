@@ -3,14 +3,17 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
 
 const router = useRouter()
 const auth = useAuthStore()
 const cart = useCartStore()
+const wishlist = useWishlistStore()
 const keyword = ref('')
 
 onMounted(() => {
   cart.fetch()
+  wishlist.fetch()
 })
 
 function search() {
@@ -20,6 +23,7 @@ function search() {
 function logout() {
   auth.logout()
   cart.clear()
+  wishlist.clear()
   router.push('/')
 }
 </script>
@@ -39,6 +43,12 @@ function logout() {
 
       <nav class="nav">
         <router-link to="/products">全商品</router-link>
+        <template v-if="auth.isLoggedIn">
+          <router-link to="/wishlist" class="cart-link">
+            お気に入り
+            <el-badge v-if="wishlist.totalCount > 0" :value="wishlist.totalCount" class="cart-badge" />
+          </router-link>
+        </template>
         <router-link to="/cart" class="cart-link">
           カート
           <el-badge v-if="cart.totalCount > 0" :value="cart.totalCount" class="cart-badge" />

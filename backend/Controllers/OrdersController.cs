@@ -24,9 +24,10 @@ public class OrdersController : ControllerBase
 
     private static OrderDto ToDto(Order o) => new(
         o.Id, o.Status.ToString(), o.TotalAmount, o.DiscountAmount,
+        o.PointsUsed, o.PointsEarned,
         o.CreatedAt, o.PaidAt, o.ShippedAt, o.CompletedAt,
         new AddressDto(o.Address!.Id, o.Address.Recipient, o.Address.Phone, o.Address.Province, o.Address.City, o.Address.Detail, o.Address.IsDefault),
-        o.Items.Select(i => new OrderItemDto(i.ProductId, i.ProductName, i.ProductImageUrl, i.Price, i.Quantity)).ToList());
+        o.Items.Select(i => new OrderItemDto(i.ProductId, i.ProductName, i.ProductImageUrl, i.VariantLabel, i.Price, i.Quantity)).ToList());
 
     [HttpPost]
     public async Task<ActionResult<OrderDto>> Create(CreateOrderRequest request)
@@ -96,9 +97,24 @@ public class OrdersController : ControllerBase
         order.Status = OrderStatus.Cancelled;
         foreach (var item in order.Items)
         {
-            var product = await _db.Products.FindAsync(item.ProductId);
-            if (product is not null) product.Stock += item.Quantity;
+            if (item.ProductVariantId.HasValue)
+            {
+                var variant = await _db.ProductVariants.FindAsync(item.ProductVariantId.Value);
+                if (variant is not null) variant.Stock += item.Quantity;
+            }
+            else
+            {
+                var product = await _db.Products.FindAsync(item.ProductId);
+                if (product is not null) product.Stock += item.Quantity;
+            }
         }
+
+        if (order.PointsUsed > 0)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user is not null) user.Points += order.PointsUsed;
+        }
+
         await _db.SaveChangesAsync();
         return Ok(ToDto(order));
     }

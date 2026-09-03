@@ -17,8 +17,8 @@ export const addressesApi = {
 }
 
 export const ordersApi = {
-  create(addressId: number, couponCode?: string) {
-    return http.post<Order>('/orders', { addressId, couponCode: couponCode || null }).then((r) => r.data)
+  create(addressId: number, couponCode?: string, pointsToUse = 0) {
+    return http.post<Order>('/orders', { addressId, couponCode: couponCode || null, pointsToUse }).then((r) => r.data)
   },
   list() {
     return http.get<Order[]>('/orders').then((r) => r.data)

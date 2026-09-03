@@ -25,8 +25,8 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  async function add(productId: number, quantity: number) {
-    await cartApi.add(productId, quantity)
+  async function add(productId: number, quantity: number, productVariantId: number | null = null) {
+    await cartApi.add(productId, quantity, productVariantId)
     await fetch()
   }
 

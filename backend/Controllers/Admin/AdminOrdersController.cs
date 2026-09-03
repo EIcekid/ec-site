@@ -55,9 +55,10 @@ public class AdminOrdersController : ControllerBase
 
         return Ok(new OrderDto(
             order.Id, order.Status.ToString(), order.TotalAmount, order.DiscountAmount,
+            order.PointsUsed, order.PointsEarned,
             order.CreatedAt, order.PaidAt, order.ShippedAt, order.CompletedAt,
             new AddressDto(order.Address!.Id, order.Address.Recipient, order.Address.Phone, order.Address.Province, order.Address.City, order.Address.Detail, order.Address.IsDefault),
-            order.Items.Select(i => new OrderItemDto(i.ProductId, i.ProductName, i.ProductImageUrl, i.Price, i.Quantity)).ToList()));
+            order.Items.Select(i => new OrderItemDto(i.ProductId, i.ProductName, i.ProductImageUrl, i.VariantLabel, i.Price, i.Quantity)).ToList()));
     }
 
     [HttpPut("{id:int}/status")]
@@ -79,7 +80,12 @@ public class AdminOrdersController : ControllerBase
 
         order.Status = newStatus;
         if (newStatus == OrderStatus.Shipped) order.ShippedAt = DateTime.UtcNow;
-        if (newStatus == OrderStatus.Completed) order.CompletedAt = DateTime.UtcNow;
+        if (newStatus == OrderStatus.Completed)
+        {
+            order.CompletedAt = DateTime.UtcNow;
+            order.PointsEarned = (int)(order.TotalAmount / OrderService.PointsEarnRateYen);
+            if (order.User is not null) order.User.Points += order.PointsEarned;
+        }
         await _db.SaveChangesAsync();
 
         if (order.User is not null)

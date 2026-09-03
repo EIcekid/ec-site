@@ -1,6 +1,6 @@
 namespace EcSite.Api.Models;
 
-public class CartItem
+public class WishlistItem
 {
     public int Id { get; set; }
     public int UserId { get; set; }
@@ -9,8 +9,5 @@ public class CartItem
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
-    public int? ProductVariantId { get; set; }
-    public ProductVariant? ProductVariant { get; set; }
-
-    public int Quantity { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

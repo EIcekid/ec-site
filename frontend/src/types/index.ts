@@ -21,6 +21,15 @@ export interface ProductListItem {
   categoryName: string
 }
 
+export interface ProductVariant {
+  id: number
+  color: string | null
+  size: string | null
+  sku: string
+  priceDelta: number
+  stock: number
+}
+
 export interface ProductDetail {
   id: number
   name: string
@@ -32,6 +41,8 @@ export interface ProductDetail {
   images: string[]
   averageRating: number
   reviewCount: number
+  variants: ProductVariant[]
+  isFavorited: boolean
 }
 
 export interface Review {
@@ -57,6 +68,8 @@ export interface CartItem {
   price: number
   quantity: number
   stock: number
+  productVariantId: number | null
+  variantLabel: string | null
 }
 
 export interface Address {
@@ -73,6 +86,7 @@ export interface OrderItem {
   productId: number
   productName: string
   productImageUrl: string | null
+  variantLabel: string | null
   price: number
   quantity: number
 }
@@ -84,6 +98,8 @@ export interface Order {
   status: OrderStatus
   totalAmount: number
   discountAmount: number
+  pointsUsed: number
+  pointsEarned: number
   createdAt: string
   paidAt: string | null
   shippedAt: string | null
@@ -115,4 +131,21 @@ export interface DashboardStats {
   totalOrders: number
   totalUsers: number
   totalRevenue: number
+}
+
+export interface Me {
+  id: number
+  email: string
+  name: string
+  role: 'Customer' | 'Admin'
+  points: number
+}
+
+export interface WishlistItem {
+  id: number
+  productId: number
+  productName: string
+  imageUrl: string | null
+  price: number
+  stock: number
 }

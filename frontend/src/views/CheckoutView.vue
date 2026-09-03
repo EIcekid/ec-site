@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '../stores/cart'
 import { addressesApi, ordersApi } from '../api/orders'
+import { usersApi } from '../api/users'
 import type { Address } from '../types'
+
+const POINT_VALUE_YEN = 0.1
 
 const cart = useCartStore()
 const router = useRouter()
@@ -13,6 +16,17 @@ const addresses = ref<Address[]>([])
 const selectedAddressId = ref<number | null>(null)
 const couponCode = ref('')
 const submitting = ref(false)
+
+const myPoints = ref(0)
+const pointsToUse = ref(0)
+
+const maxUsablePoints = computed(() => {
+  const capByBalance = myPoints.value
+  const capByAmount = Math.floor(cart.totalAmount / POINT_VALUE_YEN)
+  return Math.max(0, Math.min(capByBalance, capByAmount))
+})
+const pointsDiscount = computed(() => Math.min(pointsToUse.value * POINT_VALUE_YEN, cart.totalAmount))
+const estimatedTotal = computed(() => cart.totalAmount - pointsDiscount.value)
 
 const showAddressDialog = ref(false)
 const form = ref({ recipient: '', phone: '', province: '', city: '', detail: '', isDefault: false })
@@ -30,6 +44,8 @@ onMounted(async () => {
     return
   }
   await loadAddresses()
+  const me = await usersApi.me()
+  myPoints.value = me.points
 })
 
 async function saveAddress() {
@@ -51,7 +67,7 @@ async function submitOrder() {
   }
   submitting.value = true
   try {
-    const order = await ordersApi.create(selectedAddressId.value, couponCode.value || undefined)
+    const order = await ordersApi.create(selectedAddressId.value, couponCode.value || undefined, pointsToUse.value)
     await cart.fetch()
     ElMessage.success('注文が完了しました')
     router.push(`/orders/${order.id}`)
@@ -89,7 +105,10 @@ async function submitOrder() {
       <ul class="item-list">
         <li v-for="item in cart.items" :key="item.id">
           <img :src="item.imageUrl ?? '/placeholder.png'" />
-          <span class="name">{{ item.productName }}</span>
+          <span class="name">
+            {{ item.productName }}
+            <small v-if="item.variantLabel" class="variant-label">{{ item.variantLabel }}</small>
+          </span>
           <span>x{{ item.quantity }}</span>
           <span class="subtotal">¥{{ (item.price * item.quantity).toFixed(2) }}</span>
         </li>
@@ -101,9 +120,16 @@ async function submitOrder() {
       <el-input v-model="couponCode" placeholder="クーポンコードを入力（任意）" style="max-width: 300px" />
     </section>
 
+    <section class="block">
+      <h2>ポイント利用</h2>
+      <p class="points-balance">保有ポイント：{{ myPoints }} pt（100pt = ¥10）</p>
+      <el-input-number v-model="pointsToUse" :min="0" :max="maxUsablePoints" :step="100" />
+      <p v-if="pointsToUse > 0" class="points-discount">-¥{{ pointsDiscount.toFixed(2) }} 割引されます</p>
+    </section>
+
     <div class="summary">
-      <span>合計：</span>
-      <span class="total">¥{{ cart.totalAmount.toFixed(2) }}</span>
+      <span>概算合計（クーポン適用前）：</span>
+      <span class="total">¥{{ estimatedTotal.toFixed(2) }}</span>
       <el-button type="primary" size="large" :loading="submitting" @click="submitOrder">注文を確定する</el-button>
     </div>
 
@@ -185,6 +211,22 @@ async function submitOrder() {
 }
 .item-list .name {
   flex: 1;
+}
+.variant-label {
+  display: block;
+  color: #909399;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.points-balance {
+  margin: 0 0 12px;
+  color: #606266;
+  font-size: 14px;
+}
+.points-discount {
+  margin: 8px 0 0;
+  color: #f56c6c;
+  font-size: 13px;
 }
 .subtotal {
   color: #f56c6c;

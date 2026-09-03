@@ -25,6 +25,9 @@ public class Order
     public int? CouponId { get; set; }
     public Coupon? Coupon { get; set; }
 
+    public int PointsUsed { get; set; }
+    public int PointsEarned { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
     public DateTime? ShippedAt { get; set; }

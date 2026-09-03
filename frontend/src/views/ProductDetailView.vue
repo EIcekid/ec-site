@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { productsApi } from '../api/products'
 import { useCartStore } from '../stores/cart'
 import { useAuthStore } from '../stores/auth'
-import type { ProductDetail, Review } from '../types'
+import { useWishlistStore } from '../stores/wishlist'
+import type { ProductDetail, ProductListItem, Review } from '../types'
+import ProductCard from '../components/ProductCard.vue'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
 const cart = useCartStore()
 const auth = useAuthStore()
+const wishlist = useWishlistStore()
 
 const product = ref<ProductDetail | null>(null)
 const reviews = ref<Review[]>([])
+const related = ref<ProductListItem[]>([])
 const activeImage = ref('')
 const quantity = ref(1)
 const loading = ref(true)
@@ -22,20 +26,62 @@ const newRating = ref(5)
 const newContent = ref('')
 const submitting = ref(false)
 
+const selectedColor = ref<string | null>(null)
+const selectedSize = ref<string | null>(null)
+
 const productId = computed(() => Number(props.id))
+
+const colors = computed(() => {
+  if (!product.value) return []
+  return [...new Set(product.value.variants.map((v) => v.color).filter((c): c is string => !!c))]
+})
+const sizes = computed(() => {
+  if (!product.value) return []
+  return [...new Set(product.value.variants.map((v) => v.size).filter((s): s is string => !!s))]
+})
+const hasVariants = computed(() => (product.value?.variants.length ?? 0) > 0)
+
+const selectedVariant = computed(() => {
+  if (!product.value) return null
+  return product.value.variants.find(
+    (v) =>
+      (colors.value.length === 0 || v.color === selectedColor.value) &&
+      (sizes.value.length === 0 || v.size === selectedSize.value),
+  ) ?? null
+})
+
+const effectivePrice = computed(() => (product.value?.price ?? 0) + (selectedVariant.value?.priceDelta ?? 0))
+const effectiveStock = computed(() => {
+  if (!hasVariants.value) return product.value?.stock ?? 0
+  return selectedVariant.value?.stock ?? 0
+})
+const canAddToCart = computed(() => {
+  if (!hasVariants.value) return effectiveStock.value > 0
+  return selectedVariant.value !== null && effectiveStock.value > 0
+})
 
 async function loadAll() {
   loading.value = true
   try {
-    const [p, r] = await Promise.all([productsApi.get(productId.value), productsApi.reviews(productId.value)])
+    const [p, r, rel] = await Promise.all([
+      productsApi.get(productId.value),
+      productsApi.reviews(productId.value),
+      productsApi.related(productId.value),
+    ])
     product.value = p
     activeImage.value = p.images[0] ?? ''
     reviews.value = r
+    related.value = rel
+    if (p.variants.length > 0) {
+      selectedColor.value = colors.value[0] ?? null
+      selectedSize.value = sizes.value[0] ?? null
+    }
   } finally {
     loading.value = false
   }
 }
 
+watch(() => props.id, loadAll)
 onMounted(loadAll)
 
 async function addToCart() {
@@ -43,13 +89,22 @@ async function addToCart() {
     router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
     return
   }
-  await cart.add(productId.value, quantity.value)
+  await cart.add(productId.value, quantity.value, selectedVariant.value?.id ?? null)
   ElMessage.success('カートに追加しました')
 }
 
 async function buyNow() {
   await addToCart()
   router.push('/cart')
+}
+
+async function toggleFavorite() {
+  if (!auth.isLoggedIn) {
+    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+    return
+  }
+  await wishlist.toggle(productId.value)
+  if (product.value) product.value.isFavorited = wishlist.isFavorited(productId.value)
 }
 
 async function submitReview() {
@@ -93,24 +148,50 @@ async function submitReview() {
         </div>
 
         <div class="info">
-          <h1>{{ product.name }}</h1>
+          <div class="title-row">
+            <h1>{{ product.name }}</h1>
+            <button class="favorite-toggle" :class="{ active: wishlist.isFavorited(productId) }" @click="toggleFavorite">
+              <el-icon><Star /></el-icon>
+              {{ wishlist.isFavorited(productId) ? 'お気に入り済み' : 'お気に入りに追加' }}
+            </button>
+          </div>
           <div class="rating-row">
             <el-rate :model-value="product.averageRating" disabled allow-half />
             <span class="review-count">レビュー {{ product.reviewCount }} 件</span>
           </div>
-          <p class="price">¥{{ product.price.toFixed(2) }}</p>
-          <p class="stock">在庫 {{ product.stock }} 点</p>
+          <p class="price">¥{{ effectivePrice.toFixed(2) }}</p>
+          <p class="stock">在庫 {{ effectiveStock }} 点</p>
           <p class="desc">{{ product.description }}</p>
+
+          <div v-if="colors.length > 0" class="variant-row">
+            <span class="variant-label">カラー</span>
+            <el-radio-group v-model="selectedColor">
+              <el-radio-button v-for="c in colors" :key="c" :value="c">{{ c }}</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div v-if="sizes.length > 0" class="variant-row">
+            <span class="variant-label">サイズ</span>
+            <el-radio-group v-model="selectedSize">
+              <el-radio-button v-for="s in sizes" :key="s" :value="s">{{ s }}</el-radio-button>
+            </el-radio-group>
+          </div>
 
           <div class="qty-row">
             <span>数量</span>
-            <el-input-number v-model="quantity" :min="1" :max="product.stock" :disabled="product.stock === 0" />
+            <el-input-number v-model="quantity" :min="1" :max="Math.max(effectiveStock, 1)" :disabled="!canAddToCart" />
           </div>
 
           <div class="actions">
-            <el-button size="large" :disabled="product.stock === 0" @click="addToCart">カートに入れる</el-button>
-            <el-button size="large" type="primary" :disabled="product.stock === 0" @click="buyNow">今すぐ購入</el-button>
+            <el-button size="large" :disabled="!canAddToCart" @click="addToCart">カートに入れる</el-button>
+            <el-button size="large" type="primary" :disabled="!canAddToCart" @click="buyNow">今すぐ購入</el-button>
           </div>
+        </div>
+      </div>
+
+      <div v-if="related.length > 0" class="related">
+        <h2>関連商品</h2>
+        <div class="related-grid">
+          <ProductCard v-for="p in related" :key="p.id" :product="p" />
         </div>
       </div>
 
@@ -185,9 +266,33 @@ async function submitReview() {
 .info {
   flex: 1;
 }
-.info h1 {
-  margin: 0 0 12px;
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.title-row h1 {
+  margin: 0;
   font-size: 22px;
+}
+.favorite-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #dcdfe6;
+  border-radius: 16px;
+  background: #fff;
+  color: #606266;
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.favorite-toggle.active {
+  color: #f56c6c;
+  border-color: #f56c6c;
 }
 .rating-row {
   display: flex;
@@ -214,6 +319,18 @@ async function submitReview() {
   line-height: 1.6;
   margin-bottom: 24px;
 }
+.variant-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.variant-label {
+  width: 48px;
+  color: #606266;
+  font-size: 14px;
+  flex-shrink: 0;
+}
 .qty-row {
   display: flex;
   align-items: center;
@@ -224,8 +341,23 @@ async function submitReview() {
   display: flex;
   gap: 12px;
 }
+.related {
+  margin-top: 24px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+}
+.related h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
 .reviews {
-  margin-top: 32px;
+  margin-top: 24px;
   background: #fff;
   border-radius: 8px;
   padding: 24px;

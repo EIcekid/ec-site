@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { adminApi } from '../../api/admin'
+import { adminApi, type ProductVariantForm } from '../../api/admin'
 import { productsApi } from '../../api/products'
 import type { Category } from '../../types'
 
@@ -20,6 +20,7 @@ const form = ref({
   stock: 0,
   categoryId: undefined as number | undefined,
   images: [] as string[],
+  variants: [] as ProductVariantForm[],
 })
 const saving = ref(false)
 const uploading = ref(false)
@@ -47,6 +48,7 @@ onMounted(async () => {
       stock: p.stock,
       categoryId: p.categoryId,
       images: p.images,
+      variants: p.variants.map((v) => ({ color: v.color, size: v.size, sku: v.sku, priceDelta: v.priceDelta, stock: v.stock })),
     }
   }
 })
@@ -72,6 +74,14 @@ function removeImage(idx: number) {
   form.value.images.splice(idx, 1)
 }
 
+function addVariant() {
+  form.value.variants.push({ color: '', size: '', sku: '', priceDelta: 0, stock: 0 })
+}
+
+function removeVariant(idx: number) {
+  form.value.variants.splice(idx, 1)
+}
+
 async function addCategory() {
   if (!newCategoryName.value.trim()) return
   const created = await adminApi.createCategory(newCategoryName.value, null)
@@ -88,10 +98,20 @@ async function submit() {
   }
   saving.value = true
   try {
+    const variants = form.value.variants
+      .filter((v) => (v.color && v.color.trim()) || (v.size && v.size.trim()))
+      .map((v) => ({
+        color: v.color?.trim() || null,
+        size: v.size?.trim() || null,
+        sku: v.sku.trim(),
+        priceDelta: v.priceDelta,
+        stock: v.stock,
+      }))
+    const payload = { ...form.value, categoryId: form.value.categoryId!, variants }
     if (isEdit.value) {
-      await adminApi.updateProduct(Number(props.id), { ...form.value, categoryId: form.value.categoryId!, isActive: true })
+      await adminApi.updateProduct(Number(props.id), { ...payload, isActive: true })
     } else {
-      await adminApi.createProduct({ ...form.value, categoryId: form.value.categoryId! })
+      await adminApi.createProduct(payload)
     }
     ElMessage.success('保存しました')
     router.push('/admin/products')
@@ -118,7 +138,8 @@ async function submit() {
         <el-input-number v-model="form.price" :min="0" :precision="2" />
       </el-form-item>
       <el-form-item label="在庫数">
-        <el-input-number v-model="form.stock" :min="0" />
+        <el-input-number v-model="form.stock" :min="0" :disabled="form.variants.length > 0" />
+        <p v-if="form.variants.length > 0" class="field-hint">規格ごとの在庫を使用するため、この値は無視されます</p>
       </el-form-item>
       <el-form-item label="カテゴリー">
         <el-select v-model="form.categoryId" placeholder="カテゴリーを選択" style="width: 240px">
@@ -145,6 +166,20 @@ async function submit() {
         </div>
       </el-form-item>
 
+      <el-form-item label="規格（任意）">
+        <div class="variant-list">
+          <div v-for="(v, idx) in form.variants" :key="idx" class="variant-row">
+            <el-input v-model="v.color" placeholder="カラー（例：ブラック）" style="width: 140px" />
+            <el-input v-model="v.size" placeholder="サイズ（例：M）" style="width: 100px" />
+            <el-input v-model="v.sku" placeholder="SKU" style="width: 120px" />
+            <el-input-number v-model="v.priceDelta" placeholder="価格差" :precision="2" style="width: 120px" />
+            <el-input-number v-model="v.stock" :min="0" placeholder="在庫" style="width: 100px" />
+            <el-button type="danger" circle :icon="'Close'" size="small" @click="removeVariant(idx)" />
+          </div>
+        </div>
+        <el-button size="small" @click="addVariant">+ 規格を追加</el-button>
+      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
         <el-button @click="router.push('/admin/products')">キャンセル</el-button>
@@ -168,6 +203,22 @@ async function submit() {
   display: flex;
   gap: 8px;
   margin-top: 8px;
+}
+.field-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #e6a23c;
+}
+.variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.variant-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 .image-list {
   display: flex;

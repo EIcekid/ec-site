@@ -9,6 +9,14 @@ import type {
   ProductListItem,
 } from '../types'
 
+export interface ProductVariantForm {
+  color: string | null
+  size: string | null
+  sku: string
+  priceDelta: number
+  stock: number
+}
+
 export interface ProductForm {
   name: string
   description: string
@@ -16,6 +24,7 @@ export interface ProductForm {
   stock: number
   categoryId: number
   images: string[]
+  variants: ProductVariantForm[]
   isActive?: boolean
 }
 

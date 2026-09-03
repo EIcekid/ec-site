@@ -67,7 +67,10 @@ async function cancel() {
         <ul class="item-list">
           <li v-for="item in order.items" :key="item.productId">
             <img :src="item.productImageUrl ?? '/placeholder.png'" />
-            <span class="name">{{ item.productName }}</span>
+            <span class="name">
+              {{ item.productName }}
+              <small v-if="item.variantLabel" class="variant-label">{{ item.variantLabel }}</small>
+            </span>
             <span>¥{{ item.price.toFixed(2) }} x{{ item.quantity }}</span>
           </li>
         </ul>
@@ -76,7 +79,9 @@ async function cancel() {
       <section class="block amounts">
         <p><span>商品合計</span><span>¥{{ (order.totalAmount + order.discountAmount).toFixed(2) }}</span></p>
         <p v-if="order.discountAmount > 0"><span>割引</span><span>-¥{{ order.discountAmount.toFixed(2) }}</span></p>
+        <p v-if="order.pointsUsed > 0"><span>利用ポイント</span><span>{{ order.pointsUsed }} pt</span></p>
         <p class="grand-total"><span>お支払い金額</span><span>¥{{ order.totalAmount.toFixed(2) }}</span></p>
+        <p v-if="order.pointsEarned > 0" class="points-earned"><span>獲得ポイント</span><span>+{{ order.pointsEarned }} pt</span></p>
       </section>
 
       <div class="actions">
@@ -133,6 +138,15 @@ async function cancel() {
 }
 .item-list .name {
   flex: 1;
+}
+.variant-label {
+  display: block;
+  color: #909399;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.points-earned span:last-child {
+  color: #67c23a;
 }
 .amounts p {
   display: flex;

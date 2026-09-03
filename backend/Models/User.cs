@@ -13,10 +13,12 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Customer;
+    public int Points { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Address> Addresses { get; set; } = new();
     public List<CartItem> CartItems { get; set; } = new();
     public List<Order> Orders { get; set; } = new();
     public List<Review> Reviews { get; set; } = new();
+    public List<WishlistItem> WishlistItems { get; set; } = new();
 }

@@ -3,6 +3,8 @@ backend/bin/
 backend/obj/
 backend/wwwroot/uploads/*
 !backend/wwwroot/uploads/.gitkeep
+backend.Tests/bin/
+backend.Tests/obj/
 
 # Node / Vite
 frontend/node_modules/

@@ -1,12 +1,15 @@
 import http from './http'
 import type {
   AdminOrderListItem,
+  CategorySales,
   Coupon,
   DashboardStats,
   OrderStatus,
+  OrderStatusCount,
   PagedResult,
   ProductDetail,
   ProductListItem,
+  RevenuePoint,
 } from '../types'
 
 export interface ProductVariantForm {
@@ -31,6 +34,15 @@ export interface ProductForm {
 export const adminApi = {
   dashboard() {
     return http.get<DashboardStats>('/admin/dashboard').then((r) => r.data)
+  },
+  revenueTrend(days = 14) {
+    return http.get<RevenuePoint[]>('/admin/dashboard/revenue-trend', { params: { days } }).then((r) => r.data)
+  },
+  orderStatusDistribution() {
+    return http.get<OrderStatusCount[]>('/admin/dashboard/order-status').then((r) => r.data)
+  },
+  categorySales() {
+    return http.get<CategorySales[]>('/admin/dashboard/category-sales').then((r) => r.data)
   },
 
   products(params: { keyword?: string; page?: number; pageSize?: number }) {

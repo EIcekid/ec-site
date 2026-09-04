@@ -8,3 +8,7 @@ public record CouponDto(int Id, string Code, string Type, decimal Value, decimal
 public record AdminOrderListItemDto(int Id, string CustomerName, string Status, decimal TotalAmount, DateTime CreatedAt);
 
 public record DashboardStatsDto(int TotalProducts, int TotalOrders, int TotalUsers, decimal TotalRevenue);
+
+public record RevenuePointDto(string Date, decimal Amount);
+public record OrderStatusCountDto(string Status, int Count);
+public record CategorySalesDto(string CategoryName, decimal Amount);

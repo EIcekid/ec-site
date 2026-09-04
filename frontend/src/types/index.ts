@@ -133,6 +133,21 @@ export interface DashboardStats {
   totalRevenue: number
 }
 
+export interface RevenuePoint {
+  date: string
+  amount: number
+}
+
+export interface OrderStatusCount {
+  status: OrderStatus
+  count: number
+}
+
+export interface CategorySales {
+  categoryName: string
+  amount: number
+}
+
 export interface Me {
   id: number
   email: string

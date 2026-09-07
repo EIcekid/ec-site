@@ -22,6 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('role', auth.role)
   }
 
+  function updateName(newName: string) {
+    name.value = newName
+    localStorage.setItem('name', newName)
+  }
+
   function logout() {
     token.value = null
     email.value = null
@@ -33,5 +38,5 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('role')
   }
 
-  return { token, email, name, role, isLoggedIn, isAdmin, setAuth, logout }
+  return { token, email, name, role, isLoggedIn, isAdmin, setAuth, updateName, logout }
 })

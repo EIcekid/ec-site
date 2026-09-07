@@ -57,7 +57,7 @@ function logout() {
         <template v-if="auth.isLoggedIn">
           <router-link to="/orders">注文履歴</router-link>
           <router-link v-if="auth.isAdmin" to="/admin">管理画面</router-link>
-          <span class="user-name">{{ auth.name }}</span>
+          <router-link to="/profile" class="user-name">{{ auth.name }}</router-link>
           <a href="#" @click.prevent="logout">ログアウト</a>
         </template>
         <template v-else>

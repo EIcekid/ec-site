@@ -2,8 +2,8 @@ namespace EcSite.Api.DTOs.Admin;
 
 public record UpdateOrderStatusRequest(string Status);
 
-public record CreateCouponRequest(string Code, string Type, decimal Value, decimal MinOrderAmount, DateTime ExpiresAt);
-public record CouponDto(int Id, string Code, string Type, decimal Value, decimal MinOrderAmount, DateTime ExpiresAt, bool IsActive);
+public record CreateCouponRequest(string Code, string Type, decimal Value, decimal MinOrderAmount, DateTime ExpiresAt, bool OncePerUser);
+public record CouponDto(int Id, string Code, string Type, decimal Value, decimal MinOrderAmount, DateTime ExpiresAt, bool IsActive, bool OncePerUser);
 
 public record AdminOrderListItemDto(int Id, string CustomerName, string Status, decimal TotalAmount, DateTime CreatedAt);
 

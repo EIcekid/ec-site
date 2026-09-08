@@ -89,7 +89,7 @@ export const adminApi = {
   coupons() {
     return http.get<Coupon[]>('/admin/coupons').then((r) => r.data)
   },
-  createCoupon(payload: { code: string; type: string; value: number; minOrderAmount: number; expiresAt: string }) {
+  createCoupon(payload: { code: string; type: string; value: number; minOrderAmount: number; expiresAt: string; oncePerUser: boolean }) {
     return http.post<Coupon>('/admin/coupons', payload).then((r) => r.data)
   },
   deactivateCoupon(id: number) {

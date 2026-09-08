@@ -142,6 +142,59 @@ public class OrderServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateOrderAsync_throws_when_once_per_user_coupon_was_already_used()
+    {
+        var (user, address, category) = SeedUserAndAddress();
+        var product = SeedProduct(category, 100m, 10);
+        var coupon = new Coupon
+        {
+            Code = "ONCE10", Type = CouponType.FixedAmount, Value = 10m, MinOrderAmount = 0m,
+            ExpiresAt = DateTime.UtcNow.AddDays(1), IsActive = true, OncePerUser = true
+        };
+        _db.Coupons.Add(coupon);
+        _db.SaveChanges();
+
+        _db.CartItems.Add(new CartItem { UserId = user.Id, ProductId = product.Id, Quantity = 1 });
+        _db.SaveChanges();
+        await _sut.CreateOrderAsync(user.Id, new CreateOrderRequest(address.Id, "ONCE10", 0));
+
+        _db.CartItems.Add(new CartItem { UserId = user.Id, ProductId = product.Id, Quantity = 1 });
+        _db.SaveChanges();
+        var ex = await Assert.ThrowsAsync<OrderServiceException>(() =>
+            _sut.CreateOrderAsync(user.Id, new CreateOrderRequest(address.Id, "ONCE10", 0)));
+
+        Assert.Equal("このクーポンは既にご利用済みです（お一人様1回限り）", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_allows_once_per_user_coupon_reuse_after_previous_order_cancelled()
+    {
+        var (user, address, category) = SeedUserAndAddress();
+        var product = SeedProduct(category, 100m, 10);
+        var coupon = new Coupon
+        {
+            Code = "ONCE10", Type = CouponType.FixedAmount, Value = 10m, MinOrderAmount = 0m,
+            ExpiresAt = DateTime.UtcNow.AddDays(1), IsActive = true, OncePerUser = true
+        };
+        _db.Coupons.Add(coupon);
+        _db.SaveChanges();
+
+        _db.CartItems.Add(new CartItem { UserId = user.Id, ProductId = product.Id, Quantity = 1 });
+        _db.SaveChanges();
+        var firstOrder = await _sut.CreateOrderAsync(user.Id, new CreateOrderRequest(address.Id, "ONCE10", 0));
+
+        var trackedOrder = await _db.Orders.FindAsync(firstOrder.Id);
+        trackedOrder!.Status = OrderStatus.Cancelled;
+        _db.SaveChanges();
+
+        _db.CartItems.Add(new CartItem { UserId = user.Id, ProductId = product.Id, Quantity = 1 });
+        _db.SaveChanges();
+        var secondOrder = await _sut.CreateOrderAsync(user.Id, new CreateOrderRequest(address.Id, "ONCE10", 0));
+
+        Assert.Equal(10m, secondOrder.DiscountAmount);
+    }
+
+    [Fact]
     public async Task CreateOrderAsync_throws_when_order_total_is_below_coupon_minimum()
     {
         var (user, address, category) = SeedUserAndAddress();

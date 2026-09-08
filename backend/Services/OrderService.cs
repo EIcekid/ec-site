@@ -59,6 +59,13 @@ public class OrderService : IOrderService
             if (coupon.ExpiresAt < DateTime.UtcNow) throw new OrderServiceException("クーポンの有効期限が切れています");
             if (totalAmount < coupon.MinOrderAmount) throw new OrderServiceException($"このクーポンは{coupon.MinOrderAmount}円以上のご注文でご利用いただけます");
 
+            if (coupon.OncePerUser)
+            {
+                var alreadyUsed = await _db.Orders.AnyAsync(o =>
+                    o.UserId == userId && o.CouponId == coupon.Id && o.Status != OrderStatus.Cancelled);
+                if (alreadyUsed) throw new OrderServiceException("このクーポンは既にご利用済みです（お一人様1回限り）");
+            }
+
             couponDiscount = coupon.Type == CouponType.FixedAmount
                 ? coupon.Value
                 : Math.Round(totalAmount * coupon.Value / 100m, 2);

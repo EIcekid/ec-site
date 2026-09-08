@@ -15,7 +15,7 @@ public class AdminCouponsController : ControllerBase
     private readonly AppDbContext _db;
     public AdminCouponsController(AppDbContext db) => _db = db;
 
-    private static CouponDto ToDto(Coupon c) => new(c.Id, c.Code, c.Type.ToString(), c.Value, c.MinOrderAmount, c.ExpiresAt, c.IsActive);
+    private static CouponDto ToDto(Coupon c) => new(c.Id, c.Code, c.Type.ToString(), c.Value, c.MinOrderAmount, c.ExpiresAt, c.IsActive, c.OncePerUser);
 
     [HttpGet]
     public async Task<ActionResult<List<CouponDto>>> List()
@@ -36,7 +36,8 @@ public class AdminCouponsController : ControllerBase
         var coupon = new Coupon
         {
             Code = request.Code, Type = type, Value = request.Value,
-            MinOrderAmount = request.MinOrderAmount, ExpiresAt = request.ExpiresAt, IsActive = true
+            MinOrderAmount = request.MinOrderAmount, ExpiresAt = request.ExpiresAt, IsActive = true,
+            OncePerUser = request.OncePerUser
         };
         _db.Coupons.Add(coupon);
         await _db.SaveChangesAsync();

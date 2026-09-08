@@ -124,6 +124,7 @@ export interface Coupon {
   minOrderAmount: number
   expiresAt: string
   isActive: boolean
+  oncePerUser: boolean
 }
 
 export interface DashboardStats {

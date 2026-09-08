@@ -15,4 +15,5 @@ public class Coupon
     public decimal MinOrderAmount { get; set; }
     public DateTime ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool OncePerUser { get; set; }
 }

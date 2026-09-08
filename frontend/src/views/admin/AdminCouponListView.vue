@@ -15,6 +15,7 @@ const form = ref({
   value: 0,
   minOrderAmount: 0,
   expiresAt: '',
+  oncePerUser: false,
 })
 
 async function load() {
@@ -29,7 +30,7 @@ async function load() {
 onMounted(load)
 
 function openCreate() {
-  form.value = { code: '', type: 'FixedAmount', value: 0, minOrderAmount: 0, expiresAt: '' }
+  form.value = { code: '', type: 'FixedAmount', value: 0, minOrderAmount: 0, expiresAt: '', oncePerUser: false }
   showDialog.value = true
 }
 
@@ -78,6 +79,9 @@ async function deactivate(id: number) {
       <el-table-column label="有効期限" width="180">
         <template #default="{ row }">{{ new Date(row.expiresAt).toLocaleDateString() }}</template>
       </el-table-column>
+      <el-table-column label="利用制限" width="110">
+        <template #default="{ row }">{{ row.oncePerUser ? 'お一人様1回' : '制限なし' }}</template>
+      </el-table-column>
       <el-table-column label="状態" width="100">
         <template #default="{ row }">
           <el-tag :type="row.isActive ? 'success' : 'info'">{{ row.isActive ? '有効' : '停止中' }}</el-tag>
@@ -104,6 +108,10 @@ async function deactivate(id: number) {
         </el-form-item>
         <el-form-item label="最低利用金額"><el-input-number v-model="form.minOrderAmount" :min="0" :precision="2" /></el-form-item>
         <el-form-item label="有効期限"><el-date-picker v-model="form.expiresAt" type="date" style="width: 100%" /></el-form-item>
+        <el-form-item label="利用制限">
+          <el-switch v-model="form.oncePerUser" />
+          <span class="hint">お一人様1回限り</span>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showDialog = false">キャンセル</el-button>
@@ -126,5 +134,10 @@ async function deactivate(id: number) {
 }
 .table {
   background: #fff;
+}
+.hint {
+  margin-left: 8px;
+  color: #909399;
+  font-size: 13px;
 }
 </style>

@@ -104,7 +104,8 @@ public static class SeedData
                 Value = 10.00m,
                 MinOrderAmount = 100.00m,
                 ExpiresAt = DateTime.UtcNow.AddMonths(6),
-                IsActive = true
+                IsActive = true,
+                OncePerUser = true
             });
         }
 

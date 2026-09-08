@@ -19,7 +19,9 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore backend/EcSite.Api.csproj backend.Tests/EcSite.Api.Tests.csproj
+        run: |
+          dotnet restore backend/EcSite.Api.csproj
+          dotnet restore backend.Tests/EcSite.Api.Tests.csproj
 
       - name: Build
         run: dotnet build backend/EcSite.Api.csproj --no-restore --configuration Release

@@ -3,12 +3,14 @@ using EcSite.Api.DTOs.Auth;
 using EcSite.Api.Models;
 using EcSite.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcSite.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("auth")]
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _db;

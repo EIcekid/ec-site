@@ -1,8 +1,11 @@
 using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using EcSite.Api;
 using EcSite.Api.Data;
 using EcSite.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -44,6 +47,28 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddRateLimiter(options =>
+{
+    // Partitioned per client IP so one abusive caller can't lock everyone else out.
+    options.AddPolicy("auth", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            JsonSerializer.Serialize(new { message = "試行回数が多すぎます。しばらくしてから再度お試しください。" }),
+            cancellationToken);
+    };
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -69,6 +94,7 @@ app.UseSwaggerUI(options =>
 
 app.UseCors("Frontend");
 app.UseStaticFiles();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

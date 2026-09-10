@@ -9,6 +9,8 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = 20
 const status = ref<OrderStatus | ''>('')
+const keyword = ref('')
+const dateRange = ref<[Date, Date] | null>(null)
 const loading = ref(true)
 
 const statusOptions: { label: string; value: OrderStatus | '' }[] = [
@@ -20,15 +22,31 @@ const statusOptions: { label: string; value: OrderStatus | '' }[] = [
   { label: 'キャンセル済み', value: 'Cancelled' },
 ]
 
+function toDateParam(d: Date) {
+  return d.toISOString().slice(0, 10)
+}
+
 async function load() {
   loading.value = true
   try {
-    const result = await adminApi.orders({ status: status.value || undefined, page: page.value, pageSize })
+    const result = await adminApi.orders({
+      status: status.value || undefined,
+      keyword: keyword.value || undefined,
+      fromDate: dateRange.value ? toDateParam(dateRange.value[0]) : undefined,
+      toDate: dateRange.value ? toDateParam(dateRange.value[1]) : undefined,
+      page: page.value,
+      pageSize,
+    })
     orders.value = result.items
     total.value = result.totalCount
   } finally {
     loading.value = false
   }
+}
+
+function search() {
+  page.value = 1
+  load()
 }
 
 onMounted(load)
@@ -39,9 +57,24 @@ onMounted(load)
     <h1 class="title">注文管理</h1>
 
     <div class="toolbar">
-      <el-select v-model="status" style="width: 140px" @change="load">
+      <el-input
+        v-model="keyword"
+        placeholder="注文番号・顧客名・メールアドレスで検索"
+        clearable
+        style="width: 260px"
+        @keyup.enter="search"
+      />
+      <el-date-picker
+        v-model="dateRange"
+        type="daterange"
+        start-placeholder="開始日"
+        end-placeholder="終了日"
+        style="width: 260px"
+      />
+      <el-select v-model="status" style="width: 140px">
         <el-option v-for="o in statusOptions" :key="o.value" :label="o.label" :value="o.value" />
       </el-select>
+      <el-button type="primary" @click="search">検索</el-button>
     </div>
 
     <el-table v-loading="loading" :data="orders" class="table">
@@ -86,6 +119,9 @@ onMounted(load)
 }
 .toolbar {
   margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .table {
   background: #fff;

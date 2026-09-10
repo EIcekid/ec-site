@@ -26,7 +26,9 @@ public class AdminOrdersController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedResult<AdminOrderListItemDto>>> List(
-        [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        [FromQuery] string? status, [FromQuery] string? keyword,
+        [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -34,6 +36,20 @@ public class AdminOrdersController : ControllerBase
         var query = _db.Orders.AsNoTracking().Include(o => o.User).AsQueryable();
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, true, out var parsed))
             query = query.Where(o => o.Status == parsed);
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var trimmed = keyword.Trim();
+            query = int.TryParse(trimmed, out var orderId)
+                ? query.Where(o => o.Id == orderId)
+                : query.Where(o => o.User!.Name.Contains(trimmed) || o.User.Email.Contains(trimmed));
+        }
+
+        if (fromDate.HasValue)
+            query = query.Where(o => o.CreatedAt >= fromDate.Value.Date);
+
+        if (toDate.HasValue)
+            query = query.Where(o => o.CreatedAt < toDate.Value.Date.AddDays(1));
 
         var total = await query.CountAsync();
         var items = await query

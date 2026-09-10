@@ -76,7 +76,7 @@ export const adminApi = {
     }).then((r) => r.data)
   },
 
-  orders(params: { status?: string; page?: number; pageSize?: number }) {
+  orders(params: { status?: string; keyword?: string; fromDate?: string; toDate?: string; page?: number; pageSize?: number }) {
     return http.get<PagedResult<AdminOrderListItem>>('/admin/orders', { params }).then((r) => r.data)
   },
   order(id: number) {

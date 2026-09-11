@@ -28,4 +28,7 @@ export const productsApi = {
   addReview(productId: number, rating: number, content: string) {
     return http.post<Review>(`/products/${productId}/reviews`, { rating, content }).then((r) => r.data)
   },
+  toggleHelpful(reviewId: number) {
+    return http.post<Review>(`/products/reviews/${reviewId}/helpful`).then((r) => r.data)
+  },
 }

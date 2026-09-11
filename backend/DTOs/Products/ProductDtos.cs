@@ -17,4 +17,4 @@ public record CreateProductRequest(string Name, string Description, decimal Pric
 public record UpdateProductRequest(string Name, string Description, decimal Price, int Stock, int CategoryId, bool IsActive, List<string> Images, List<ProductVariantInput> Variants);
 
 public record CreateReviewRequest(int Rating, string Content);
-public record ReviewDto(int Id, string UserName, int Rating, string Content, DateTime CreatedAt);
+public record ReviewDto(int Id, string UserName, int Rating, string Content, DateTime CreatedAt, int HelpfulCount, bool IsVotedByMe);

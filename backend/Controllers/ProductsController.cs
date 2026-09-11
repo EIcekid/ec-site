@@ -121,13 +121,47 @@ public class ProductsController : ControllerBase
     [HttpGet("{id:int}/reviews")]
     public async Task<ActionResult<List<ReviewDto>>> GetReviews(int id)
     {
+        var currentUserId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : (int?)null;
+
         var reviews = await _db.Reviews.AsNoTracking()
             .Where(r => r.ProductId == id)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new ReviewDto(r.Id, r.User!.Name, r.Rating, r.Content, r.CreatedAt))
+            .Select(r => new
+            {
+                r.Id,
+                UserName = r.User!.Name,
+                r.Rating,
+                r.Content,
+                r.CreatedAt,
+                HelpfulCount = _db.ReviewVotes.Count(v => v.ReviewId == r.Id),
+                IsVotedByMe = currentUserId != null && _db.ReviewVotes.Any(v => v.ReviewId == r.Id && v.UserId == currentUserId),
+            })
+            .OrderByDescending(r => r.HelpfulCount)
+            .ThenByDescending(r => r.CreatedAt)
             .ToListAsync();
 
-        return Ok(reviews);
+        return Ok(reviews.Select(r => new ReviewDto(r.Id, r.UserName, r.Rating, r.Content, r.CreatedAt, r.HelpfulCount, r.IsVotedByMe)));
+    }
+
+    [Authorize]
+    [HttpPost("reviews/{reviewId:int}/helpful")]
+    public async Task<ActionResult<ReviewDto>> ToggleHelpful(int reviewId)
+    {
+        var review = await _db.Reviews.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == reviewId);
+        if (review is null) return NotFound();
+
+        var userId = User.GetUserId();
+        if (review.UserId == userId) return BadRequest(new { message = "自分のレビューには投票できません" });
+
+        var existingVote = await _db.ReviewVotes.FirstOrDefaultAsync(v => v.ReviewId == reviewId && v.UserId == userId);
+        if (existingVote is not null)
+            _db.ReviewVotes.Remove(existingVote);
+        else
+            _db.ReviewVotes.Add(new ReviewVote { ReviewId = reviewId, UserId = userId });
+
+        await _db.SaveChangesAsync();
+
+        var helpfulCount = await _db.ReviewVotes.CountAsync(v => v.ReviewId == reviewId);
+        return Ok(new ReviewDto(review.Id, review.User!.Name, review.Rating, review.Content, review.CreatedAt, helpfulCount, existingVote is null));
     }
 
     [Authorize]
@@ -152,6 +186,6 @@ public class ProductsController : ControllerBase
         _db.Reviews.Add(review);
         await _db.SaveChangesAsync();
 
-        return Ok(new ReviewDto(review.Id, user!.Name, review.Rating, review.Content, review.CreatedAt));
+        return Ok(new ReviewDto(review.Id, user!.Name, review.Rating, review.Content, review.CreatedAt, 0, false));
     }
 }

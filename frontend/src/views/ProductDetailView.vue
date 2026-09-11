@@ -107,6 +107,20 @@ async function toggleFavorite() {
   if (product.value) product.value.isFavorited = wishlist.isFavorited(productId.value)
 }
 
+async function toggleHelpful(review: Review) {
+  if (!auth.isLoggedIn) {
+    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+    return
+  }
+  try {
+    const updated = await productsApi.toggleHelpful(review.id)
+    const idx = reviews.value.findIndex((r) => r.id === review.id)
+    if (idx !== -1) reviews.value[idx] = { ...reviews.value[idx], ...updated }
+  } catch (e: any) {
+    ElMessage.error(e.response?.data?.message ?? '操作に失敗しました')
+  }
+}
+
 async function submitReview() {
   if (!newContent.value.trim()) {
     ElMessage.warning('レビュー内容を入力してください')
@@ -212,6 +226,10 @@ async function submitReview() {
               <span class="review-date">{{ new Date(r.createdAt).toLocaleDateString() }}</span>
             </div>
             <p>{{ r.content }}</p>
+            <button class="helpful-btn" :class="{ active: r.isVotedByMe }" @click="toggleHelpful(r)">
+              <el-icon><Pointer /></el-icon>
+              役に立った{{ r.helpfulCount > 0 ? `（${r.helpfulCount}）` : '' }}
+            </button>
           </li>
         </ul>
         <el-empty v-if="reviews.length === 0" description="まだレビューがありません" />
@@ -396,5 +414,22 @@ async function submitReview() {
 .review-date {
   color: #c0c4cc;
   font-size: 12px;
+}
+.helpful-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 14px;
+  background: #fff;
+  color: #606266;
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.helpful-btn.active {
+  color: #409eff;
+  border-color: #409eff;
 }
 </style>

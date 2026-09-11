@@ -51,6 +51,8 @@ export interface Review {
   rating: number
   content: string
   createdAt: string
+  helpfulCount: number
+  isVotedByMe: boolean
 }
 
 export interface PagedResult<T> {

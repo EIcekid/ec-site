@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<ReviewVote> ReviewVotes => Set<ReviewVote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +101,16 @@ public class AppDbContext : DbContext
         {
             e.HasOne(r => r.Product).WithMany(p => p.Reviews).HasForeignKey(r => r.ProductId);
             e.HasOne(r => r.User).WithMany(u => u.Reviews).HasForeignKey(r => r.UserId);
+        });
+
+        modelBuilder.Entity<ReviewVote>(e =>
+        {
+            e.HasIndex(v => new { v.ReviewId, v.UserId }).IsUnique();
+            e.HasOne(v => v.Review).WithMany().HasForeignKey(v => v.ReviewId);
+            // Restrict (not Cascade): User -> Review is already Cascade, so User -> ReviewVote via
+            // Review is one path already; a second direct Cascade path here hits SQL Server's
+            // "multiple cascade paths" restriction.
+            e.HasOne(v => v.User).WithMany().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Address>(e =>
